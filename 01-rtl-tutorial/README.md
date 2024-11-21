@@ -6,7 +6,7 @@ Since adding React Testing Library to an existing Vite project requires quite a 
 
 ## Setup
 
-In order to follow along with the course content, you will need to get a hold of the course repository located at this [URL](Course Repo URL HERE).I also shared the link in the previous lecture, so
+In order to follow along with the course content, you will need to get a hold of the course repository located at this [URL](https://github.com/john-smilga/react-testing-course).I also shared the link in the previous lecture, so
 Once you have cloned the repository, open the 01-rtl-tutorial folder in your favorite IDE (in my case VSCode), install the dependencies by running `npm install`, run `npm run dev` to start the project in development mode, and also open another terminal instance and run `npm run test` to start the tests.If everything is set up correctly, you should see the following output in the terminal:
 
 ## Files and Folders
