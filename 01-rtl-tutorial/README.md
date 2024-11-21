@@ -212,7 +212,7 @@ Vitest and React Testing Library (RTL) serve different but complementary purpose
 ## Setup
 
 - stop the test runner (CTRL + C)
-- optional: remove App.test.tsx
+- optional: remove App.test.tsx and random.test.ts
 - explore ./src/tutorial
   - where we will be writing our tests and setting up our components
 - explore ./src/final
