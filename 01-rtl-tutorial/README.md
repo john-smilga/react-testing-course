@@ -658,7 +658,7 @@ describe('Sandbox Component', () => {
 
 [Compare Queries](https://testing-library.com/docs/queries/about)
 
-![Queries in RTL](./images/compare-queries.png)
+![Queries in RTL](./public/queries.png)
 
 - first test whether textbox is in the document
 - then test whether it's empty
