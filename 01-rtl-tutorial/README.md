@@ -245,6 +245,44 @@ export default defineConfig({
 
 ## Search ByText
 
+- create
+  ./src/tutorial/01-search-by-text/Sandbox.tsx
+- you can also copy from final/01-search-by-text/Sandbox.tsx
+
+```tsx
+import { useEffect, useState } from 'react';
+
+function Sandbox() {
+  const [showMessage, setShowMessage] = useState(false);
+  const [showError, setShowError] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowMessage(true);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <div>
+      <h1>React Testing Library Examples</h1>
+      <p>You can search me with regular expression: 123-456-7890</p>
+
+      {showError && <p>Error message</p>}
+      <ul>
+        <li>Item 1</li>
+        <li>Item 1</li>
+        <li>Item 1</li>
+      </ul>
+      {showMessage && <p>Async message</p>}
+    </div>
+  );
+}
+
+export default Sandbox;
+```
+
 React Testing Library Query Methods
 getByText, queryByText, getAllByText, queryAllByText, findByText, findAllByText
 
@@ -284,43 +322,6 @@ Single vs All
   - Returns array of elements
   - Use when expecting multiple matches
 
-- inspect the component
-  ./src/tutorial/01-search-by-text/Sandbox.tsx
-
-```tsx
-import { useEffect, useState } from 'react';
-
-function Sandbox() {
-  const [showMessage, setShowMessage] = useState(false);
-  const [showError, setShowError] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowMessage(true);
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  return (
-    <div>
-      <h1>React Testing Library Examples</h1>
-      <p>You can search me with regular expression: 123-456-7890</p>
-
-      {showError && <p>Error message</p>}
-      <ul>
-        <li>Item 1</li>
-        <li>Item 1</li>
-        <li>Item 1</li>
-      </ul>
-      {showMessage && <p>Async message</p>}
-    </div>
-  );
-}
-
-export default Sandbox;
-```
-
 - create test file
   ./src/tutorial/01-search-by-text/Sandbox.test.tsx
 
@@ -356,6 +357,838 @@ describe('01-search-by-text', () => {
     // 5. findByText - async element
     const asyncMessage = await screen.findByText('Async message');
     expect(asyncMessage).toBeInTheDocument();
+  });
+});
+```
+
+## TDD Example
+
+TDD (Test-Driven Development) is a programming approach where you write tests before writing the actual code. First, you write a failing test that describes what you want your code to do. Then, you write just enough code to make that test pass. Finally, you improve your code while keeping the tests passing. This cycle is known as "red-green-refactor" - red because the test fails initially (showing in red), and green because the test passes after writing the code (showing in green).
+
+Key benefits of TDD include:
+
+- Early bug detection and prevention
+- Better code design and architecture since you think about usage before implementation
+- Built-in documentation through test cases
+- Increased confidence when refactoring code
+- Forces modular and loosely coupled code
+- Reduces debugging time in the long run
+- Provides fast feedback during development
+
+- create test file
+  ./src/tutorial/02-tdd-example/Sandbox.test.tsx
+- test whether heading renders correctly
+
+```tsx
+import { render, screen } from '@testing-library/react';
+import Sandbox from './Sandbox';
+
+describe('02-tdd-example', () => {
+  test('should render header', () => {
+    render(<Sandbox />);
+    const heading = screen.getByText(/testing/i);
+    expect(heading).toBeInTheDocument();
+  });
+});
+```
+
+- test should fail
+- create Sandbox.tsx file
+
+```tsx
+function Sandbox() {
+  return <div>Sandbox</div>;
+}
+export default Sandbox;
+```
+
+- test should fail, because we have no heading
+- add heading to Sandbox.tsx
+- test should pass
+
+```tsx
+function Sandbox() {
+  return (
+    <div>
+      <h1>React Testing Library Examples</h1>
+    </div>
+  );
+}
+export default Sandbox;
+```
+
+## getByRole
+
+./src/tutorial/03-search-by-role/Sandbox.tsx
+
+```tsx
+import { useEffect, useState } from 'react';
+
+const Sandbox = () => {
+  const [showAsyncButton, setShowAsyncButton] = useState(false);
+  const [showError, setShowError] = useState(false);
+
+  useEffect(() => {
+    // Show async button after 500ms
+    const timer = setTimeout(() => {
+      setShowAsyncButton(true);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <div>
+      <nav>
+        <a href='/'>Home</a>
+        <a href='/about'>About</a>
+      </nav>
+
+      {/* Headings */}
+      <h1>Main Heading</h1>
+      <h2>Subheading</h2>
+
+      <img src='example.jpg' alt='Example' />
+
+      {/* Regular buttons */}
+      <button>Click me</button>
+      <button>Submit</button>
+      <button>Cancel</button>
+
+      {/* Conditional error button to demonstrate queryByRole */}
+      {showError && <button>Error</button>}
+
+      {/* Async button to demonstrate findByRole */}
+      {showAsyncButton && <button>Async Button</button>}
+    </div>
+  );
+};
+
+export default Sandbox;
+```
+
+getByRole and getByText are widely used because they closely mirror how users interact with your application. getByText is intuitive as it finds elements by their visible content, just like users would read them. However, getByRole is often superior because it ensures your app is accessible - it works with the same ARIA roles that screen readers use. For example, when testing a button that only contains an icon (no text), getByText wouldn't work, but getByRole('button') would find it correctly:
+
+getByRole, queryByRole, getAllByRole, queryAllByRole, findByRole, findAllByRole
+
+### 1. getBy... Methods
+
+```typescript
+const button = screen.getByRole('button');
+```
+
+- Returns a single element
+- Throws an error immediately if no element is found
+- Throws if multiple elements match
+- Use when you expect the element to be in the DOM
+
+### 2. queryBy... Methods
+
+```typescript
+const button = screen.queryByRole('button');
+```
+
+- Returns a single element
+- Returns `null` if no element is found (doesn't throw)
+- Throws if multiple elements match
+- Best for asserting elements are NOT present
+
+### 3. findBy... Methods
+
+```typescript
+const button = await screen.findByRole('button');
+```
+
+- Returns a Promise that resolves to a single element
+- Retries the query until element is found or timeout (default 1000ms)
+- Rejects if no element found after timeout
+- Perfect for testing async elements
+
+### 4. getAllBy... Methods
+
+```typescript
+const buttons = screen.getAllByRole('button');
+```
+
+- Returns an array of elements
+- Throws if no elements found
+- Can return multiple elements
+- Use when expecting multiple matching elements
+
+### 5. queryAllBy... Methods
+
+```typescript
+const buttons = screen.queryAllByRole('button');
+```
+
+- Returns an array of elements
+- Returns empty array if no elements found
+- Can return multiple elements
+- Good for checking elements don't exist
+
+### 6. findAllBy... Methods
+
+```typescript
+const buttons = await screen.findAllByRole('button');
+```
+
+- Returns a Promise that resolves to an array of elements
+- Retries until elements found or timeout
+- Rejects if no elements found after timeout
+- Use for async elements when expecting multiple matches
+
+## Common Use Cases
+
+```typescript
+// Testing element presence
+test('button exists', () => {
+  render(<MyComponent />);
+  expect(screen.getByRole('button')).toBeInTheDocument();
+});
+
+// Testing element absence
+test('error message not shown initially', () => {
+  render(<MyComponent />);
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+});
+
+// Testing async elements
+test('message appears after delay', async () => {
+  render(<MyComponent />);
+  const message = await screen.findByRole('status');
+  expect(message).toBeInTheDocument();
+});
+
+// Testing multiple elements
+test('renders multiple list items', () => {
+  render(<MyComponent />);
+  const items = screen.getAllByRole('listitem');
+  expect(items).toHaveLength(3);
+});
+```
+
+The key is choosing the right query method based on your testing needs:
+
+- Use `getBy` when element should exist
+- Use `queryBy` when testing element absence
+- Use `findBy` for async elements
+- Use `...All` variants when dealing with multiple elements
+
+./src/tutorial/03-search-by-role/Sandbox.test.tsx
+
+```tsx
+import { render, screen } from '@testing-library/react';
+import Sandbox from './Sandbox';
+import { logRoles } from '@testing-library/react';
+describe('Sandbox Component', () => {
+  test('renders nav and  navigation links', () => {
+    const { container } = render(<Sandbox />);
+    expect(screen.getByRole('navigation')).toBeInTheDocument();
+    // getByRole throws an error if there are multiple elements with the same role
+    // two options:provide name or getAllByRole (returns a list)
+    logRoles(container);
+
+    expect(screen.getByRole('link', { name: 'Home' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'About' })).toBeInTheDocument();
+    // log the url to the playground
+    console.log(screen.logTestingPlaygroundURL());
+  });
+
+  test('renders headings with correct hierarchy', () => {
+    render(<Sandbox />);
+
+    expect(
+      screen.getByRole('heading', { name: 'Main Heading', level: 1 })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: 'Subheading', level: 2 })
+    ).toBeInTheDocument();
+  });
+
+  test('renders image with alt text', () => {
+    render(<Sandbox />);
+
+    expect(screen.getByRole('img', { name: 'Example' })).toBeInTheDocument();
+  });
+
+  test('renders initial buttons', () => {
+    render(<Sandbox />);
+
+    expect(
+      screen.getByRole('button', { name: 'Click me' })
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Submit' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
+  });
+
+  test('error button is not initially visible', () => {
+    render(<Sandbox />);
+
+    expect(
+      screen.queryByRole('button', { name: 'Error' })
+    ).not.toBeInTheDocument();
+  });
+
+  test('async button appears after delay', async () => {
+    render(<Sandbox />);
+
+    // Button should not be present initially
+    expect(
+      screen.queryByRole('button', { name: 'Async Button' })
+    ).not.toBeInTheDocument();
+
+    // Wait for button to appear using findByRole
+    const asyncButton = await screen.findByRole('button', {
+      name: 'Async Button',
+    });
+    expect(asyncButton).toBeInTheDocument();
+  });
+});
+```
+
+## Form Project
+
+- setup parent component
+  - state for list of users
+- render form and list
+- in form render
+  - name, textbox, select, button
+- in list
+  - render each item
+
+[Compare Queries](https://testing-library.com/docs/queries/about)
+
+![Queries in RTL](./images/compare-queries.png)
+
+- first test whether textbox is in the document
+- then test whether it's empty
+
+```tsx
+const Sandbox = () => {
+  return (
+    <div className='container my-5'>
+      <form>
+        <div className='mb-3'>
+          <label htmlFor='email' className='form-label'>
+            Email address
+          </label>
+          <input type='email' className='form-control' id='email' />
+        </div>
+        <div className='mb-3'>
+          <label htmlFor='password' className='form-label'>
+            Password
+          </label>
+          <input type='password' className='form-control' id='password' />
+        </div>
+        <div className='mb-3'>
+          <label htmlFor='confirmPassword' className='form-label'>
+            Confirm Password
+          </label>
+          <input
+            type='password'
+            className='form-control'
+            id='confirmPassword'
+          />
+        </div>
+      </form>
+    </div>
+  );
+};
+export default Sandbox;
+```
+
+- RTL only cares about the end result, not the implementation
+- if we nest components, screen.debug() will show the elements in the nested components
+
+```tsx
+import { describe, test, expect } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import Sandbox from '../components/Sandbox';
+import userEvent from '@testing-library/user-event';
+describe('inputs should be initially empty', () => {
+  test('renders correctly', () => {
+    render(<Sandbox />);
+    screen.debug(); // Logs the DOM structure
+
+    const emailInputElement = screen.getByRole('textbox');
+    expect(emailInputElement).toHaveValue('');
+    // in order to test the password input, we need to get the element by its label text
+    // once we add confirm password, our regex will find multiple elements, so we need to use the exact label text
+    // const passwordInputElement = screen.getByLabelText(/password/i);
+    const passwordInputElement = screen.getByLabelText('Password');
+    expect(passwordInputElement).toHaveValue('');
+
+    const confirmPasswordInputElement =
+      screen.getByLabelText(/confirm password/i);
+    expect(confirmPasswordInputElement).toHaveValue('');
+  });
+  test('should be able to type in input', async () => {
+    const user = userEvent.setup();
+
+    render(<Sandbox />);
+    // email
+    const emailInputElement = screen.getByRole('textbox', { name: /email/i });
+    await user.type(emailInputElement, 'test@test.com');
+    expect(emailInputElement).toHaveValue('test@test.com');
+
+    // password
+    const passwordInputElement = screen.getByLabelText('Password');
+    await user.type(passwordInputElement, 'secret');
+    expect(passwordInputElement).toHaveValue('secret');
+    // confirm password
+    const confirmPasswordInputElement =
+      screen.getByLabelText(/confirm password/i);
+    await user.type(confirmPasswordInputElement, 'secret');
+    expect(confirmPasswordInputElement).toHaveValue('secret');
+  });
+});
+```
+
+userEvent.setup() goes before render() to make sure all the fake mouse and keyboard stuff is ready before your component appears, just like in a real browser.
+
+## Verify Error Message
+
+```tsx
+import { useState } from 'react';
+import validator from 'validator';
+const Sandbox = () => {
+  const [signupInput, setSignupInput] = useState({
+    email: '',
+    password: '',
+    confirmPassword: '',
+  });
+  const [error, setError] = useState('');
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setSignupInput({ ...signupInput, [id]: value });
+  };
+
+  const handleSubmit = (e: React.FormEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    console.log(signupInput);
+    // TODO: validate the form
+    if (!validator.isEmail(signupInput.email)) {
+      return setError('Invalid email');
+    }
+  };
+
+  return (
+    <div className='container my-5'>
+      <form>
+        <div className='mb-3'>
+          <label htmlFor='email' className='form-label'>
+            Email address
+          </label>
+          <input
+            type='email'
+            className='form-control'
+            id='email'
+            value={signupInput.email}
+            onChange={handleChange}
+          />
+        </div>
+        <div className='mb-3'>
+          <label htmlFor='password' className='form-label'>
+            Password
+          </label>
+          <input
+            type='password'
+            className='form-control'
+            id='password'
+            value={signupInput.password}
+            onChange={handleChange}
+          />
+        </div>
+        <div className='mb-3'>
+          <label htmlFor='confirmPassword' className='form-label'>
+            Confirm Password
+          </label>
+          <input
+            type='password'
+            className='form-control'
+            id='confirmPassword'
+            value={signupInput.confirmPassword}
+            onChange={handleChange}
+          />
+        </div>
+        {error && <p className='text-danger mb-3'>{error}</p>}
+        <button
+          type='submit'
+          className='btn btn-primary'
+          onClick={handleSubmit}
+        >
+          Submit
+        </button>
+      </form>
+    </div>
+  );
+};
+export default Sandbox;
+```
+
+```tsx
+test('should show email error if email is invalid', async () => {
+  const user = userEvent.setup();
+  render(<Sandbox />);
+
+  // First verify error message is not present
+  // queryByText returns null if the element is not found
+  // getByText throws an error if the element is not found
+  // don't use the same variable since it's null so later we can't check if it's in the document
+  const emailErrorElementBefore = screen.queryByText(/invalid email/i);
+  expect(emailErrorElementBefore).not.toBeInTheDocument();
+
+  // Trigger the error condition
+  const emailInputElement = screen.getByRole('textbox', { name: /email/i });
+  await user.type(emailInputElement, 'randomtext');
+  const submitButtonElement = screen.getByRole('button', { name: /submit/i });
+  await user.click(submitButtonElement);
+
+  // Verify error message appears
+  const emailErrorElement = screen.queryByText(/invalid email/i);
+  expect(emailErrorElement).toBeInTheDocument();
+});
+```
+
+## Check Password Length
+
+```tsx
+test('should show password error if password is less than 5 characters', async () => {
+  const user = userEvent.setup();
+  render(<Sandbox />);
+
+  // First verify error message is not present
+  const passwordErrorElementBefore = screen.queryByText(
+    /password must be at least 8 characters/i
+  );
+  expect(passwordErrorElementBefore).not.toBeInTheDocument();
+
+  const emailInputElement = screen.getByRole('textbox', { name: /email/i });
+  await user.type(emailInputElement, 'test@test.com');
+
+  const passwordInputElement = screen.getByLabelText('Password');
+  await user.type(passwordInputElement, 'test');
+  const submitButtonElement = screen.getByRole('button', { name: /submit/i });
+  await user.click(submitButtonElement);
+
+  const passwordErrorElement = screen.queryByText(
+    /password must be at least 5 characters/i
+  );
+  expect(passwordErrorElement).toBeInTheDocument();
+});
+```
+
+## Verify Password Error
+
+```tsx
+test('should show error if passwords do not match', async () => {
+  const user = userEvent.setup();
+  render(<Sandbox />);
+  // First verify error message is not present
+  const passwordErrorElementBefore = screen.queryByText(
+    /passwords do not match/i
+  );
+  expect(passwordErrorElementBefore).not.toBeInTheDocument();
+
+  const emailInputElement = screen.getByRole('textbox', { name: /email/i });
+  await user.type(emailInputElement, 'test@test.com');
+
+  const passwordInputElement = screen.getByLabelText('Password');
+  await user.type(passwordInputElement, 'secret');
+
+  const confirmPasswordInputElement =
+    screen.getByLabelText(/confirm password/i);
+  await user.type(confirmPasswordInputElement, 'notsecret');
+
+  const submitButtonElement = screen.getByRole('button', { name: /submit/i });
+  await user.click(submitButtonElement);
+
+  const passwordErrorElement = screen.queryByText(/passwords do not match/i);
+  expect(passwordErrorElement).toBeInTheDocument();
+});
+```
+
+## Sandbox File
+
+```tsx
+import { useState } from 'react';
+import validator from 'validator';
+const Sandbox = () => {
+  const [signupInput, setSignupInput] = useState({
+    email: '',
+    password: '',
+    confirmPassword: '',
+  });
+  const [error, setError] = useState('');
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setSignupInput({ ...signupInput, [id]: value });
+  };
+
+  const handleSubmit = (e: React.FormEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    // TODO: validate the form
+    if (!validator.isEmail(signupInput.email)) {
+      return setError('Invalid email');
+    }
+    if (!validator.isLength(signupInput.password, { min: 5 })) {
+      return setError('Password must be at least 5 characters');
+    }
+    if (signupInput.password !== signupInput.confirmPassword) {
+      return setError('Passwords do not match');
+    }
+  };
+
+  return (
+    <div className='container my-5'>
+      <form>
+        <div className='mb-3'>
+          <label htmlFor='email' className='form-label'>
+            Email address
+          </label>
+          <input
+            type='email'
+            className='form-control'
+            id='email'
+            value={signupInput.email}
+            onChange={handleChange}
+          />
+        </div>
+        <div className='mb-3'>
+          <label htmlFor='password' className='form-label'>
+            Password
+          </label>
+          <input
+            type='password'
+            className='form-control'
+            id='password'
+            value={signupInput.password}
+            onChange={handleChange}
+          />
+        </div>
+        <div className='mb-3'>
+          <label htmlFor='confirmPassword' className='form-label'>
+            Confirm Password
+          </label>
+          <input
+            type='password'
+            className='form-control'
+            id='confirmPassword'
+            value={signupInput.confirmPassword}
+            onChange={handleChange}
+          />
+        </div>
+        {error && <p className='text-danger mb-3'>{error}</p>}
+        <button
+          type='submit'
+          className='btn btn-primary'
+          onClick={handleSubmit}
+        >
+          Submit
+        </button>
+      </form>
+    </div>
+  );
+};
+export default Sandbox;
+```
+
+## Show No Error Message
+
+```tsx
+test('should show no error message if all inputs are valid', async () => {
+  const user = userEvent.setup();
+  render(<Sandbox />);
+  const emailInputElement = screen.getByRole('textbox', { name: /email/i });
+  await user.type(emailInputElement, 'test@test.com');
+
+  const passwordInputElement = screen.getByLabelText('Password');
+  await user.type(passwordInputElement, 'secret');
+
+  const confirmPasswordInputElement =
+    screen.getByLabelText(/confirm password/i);
+  await user.type(confirmPasswordInputElement, 'secret');
+
+  const submitButtonElement = screen.getByRole('button', { name: /submit/i });
+  await user.click(submitButtonElement);
+
+  const errorMessageElement = screen.queryByText(/invalid email/i);
+  expect(errorMessageElement).not.toBeInTheDocument();
+
+  const passwordErrorElement = screen.queryByText(
+    /password must be at least 5 characters/i
+  );
+  expect(passwordErrorElement).not.toBeInTheDocument();
+
+  const confirmPasswordErrorElement = screen.queryByText(
+    /passwords do not match/i
+  );
+  expect(confirmPasswordErrorElement).not.toBeInTheDocument();
+});
+```
+
+## Refactor
+
+utils-test.ts
+
+```ts
+import { describe, test, expect } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import Sandbox from '../components/Sandbox';
+import userEvent, { UserEvent } from '@testing-library/user-event';
+import {
+  getFormElements,
+  fillForm,
+  validTestData,
+  FormElements,
+  expectNoErrors,
+} from './test-utils';
+
+describe('inputs should be initially empty', () => {
+  let formElements: FormElements;
+  let user: UserEvent;
+  beforeEach(() => {
+    user = userEvent.setup();
+    render(<Sandbox />);
+    formElements = getFormElements(screen);
+  });
+  test('DEBUG - component structure', () => {
+    screen.debug();
+  });
+
+  test('renders correctly', () => {
+    expect(formElements.emailInput).toHaveValue('');
+    expect(formElements.passwordInput).toHaveValue('');
+    expect(formElements.confirmPasswordInput).toHaveValue('');
+  });
+
+  test('should be able to type in input', async () => {
+    await fillForm(user, formElements, validTestData);
+
+    expect(formElements.emailInput).toHaveValue(validTestData.email);
+    expect(formElements.passwordInput).toHaveValue(validTestData.password);
+    expect(formElements.confirmPasswordInput).toHaveValue(
+      validTestData.confirmPassword
+    );
+  });
+
+  test('should show email error if email is invalid', async () => {
+    const emailErrorElementBefore = screen.queryByText(/invalid email/i);
+    expect(emailErrorElementBefore).not.toBeInTheDocument();
+
+    await fillForm(user, formElements, { email: 'randomtext' });
+    await user.click(formElements.submitButton);
+
+    const emailErrorElement = screen.queryByText(/invalid email/i);
+    expect(emailErrorElement).toBeInTheDocument();
+  });
+
+  test('should show password error if password is less than 5 characters', async () => {
+    const passwordErrorElementBefore = screen.queryByText(
+      /password must be at least 8 characters/i
+    );
+    expect(passwordErrorElementBefore).not.toBeInTheDocument();
+
+    await fillForm(user, formElements, {
+      email: validTestData.email,
+      password: 'test',
+    });
+    await user.click(formElements.submitButton);
+
+    const passwordErrorElement = screen.queryByText(
+      /password must be at least 5 characters/i
+    );
+    expect(passwordErrorElement).toBeInTheDocument();
+  });
+
+  test('should show no error message if all inputs are valid', async () => {
+    await fillForm(user, formElements, validTestData);
+    await user.click(formElements.submitButton);
+
+    expectNoErrors(screen);
+  });
+});
+```
+
+Sandbox.test.tsx
+
+```tsx
+import { describe, test, expect } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import Sandbox from '../components/Sandbox';
+import userEvent, { UserEvent } from '@testing-library/user-event';
+import {
+  getFormElements,
+  fillForm,
+  validTestData,
+  FormElements,
+  expectNoErrors,
+} from './test-utils';
+
+describe('inputs should be initially empty', () => {
+  let formElements: FormElements;
+  let user: UserEvent;
+  beforeEach(() => {
+    user = userEvent.setup();
+    render(<Sandbox />);
+    formElements = getFormElements(screen);
+  });
+  test('DEBUG - component structure', () => {
+    screen.debug();
+  });
+
+  test('renders correctly', () => {
+    expect(formElements.emailInput).toHaveValue('');
+    expect(formElements.passwordInput).toHaveValue('');
+    expect(formElements.confirmPasswordInput).toHaveValue('');
+  });
+
+  test('should be able to type in input', async () => {
+    await fillForm(user, formElements, validTestData);
+
+    expect(formElements.emailInput).toHaveValue(validTestData.email);
+    expect(formElements.passwordInput).toHaveValue(validTestData.password);
+    expect(formElements.confirmPasswordInput).toHaveValue(
+      validTestData.confirmPassword
+    );
+  });
+
+  test('should show email error if email is invalid', async () => {
+    const emailErrorElementBefore = screen.queryByText(/invalid email/i);
+    expect(emailErrorElementBefore).not.toBeInTheDocument();
+
+    await fillForm(user, formElements, { email: 'randomtext' });
+    await user.click(formElements.submitButton);
+
+    const emailErrorElement = screen.queryByText(/invalid email/i);
+    expect(emailErrorElement).toBeInTheDocument();
+  });
+
+  test('should show password error if password is less than 5 characters', async () => {
+    const passwordErrorElementBefore = screen.queryByText(
+      /password must be at least 8 characters/i
+    );
+    expect(passwordErrorElementBefore).not.toBeInTheDocument();
+
+    await fillForm(user, formElements, {
+      email: validTestData.email,
+      password: 'test',
+    });
+    await user.click(formElements.submitButton);
+
+    const passwordErrorElement = screen.queryByText(
+      /password must be at least 5 characters/i
+    );
+    expect(passwordErrorElement).toBeInTheDocument();
+  });
+
+  test('should show no error message if all inputs are valid', async () => {
+    await fillForm(user, formElements, validTestData);
+    await user.click(formElements.submitButton);
+
+    expectNoErrors(screen);
   });
 });
 ```
