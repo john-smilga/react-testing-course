@@ -846,6 +846,69 @@ describe('04-user-interactions', () => {
 });
 ```
 
+### Clarity and Accessibility
+
+```tsx
+<div>
+  {isLiked ? (
+    <button
+      onClick={handleToggleLike}
+      className='block mx-auto text-2xl text-red-500 mt-16'
+      aria-label='like button'
+    >
+      <FaHeart />
+    </button>
+  ) : (
+    <button
+      onClick={handleToggleLike}
+      className='block mx-auto text-2xl text-red-500 mt-16'
+      aria-label='unlike button'
+    >
+      <FaRegHeart />
+    </button>
+  )}
+</div>;
+{
+  /* <div>
+        <button
+          onClick={handleToggleLike}
+          className='block mx-auto text-2xl text-red-500 mt-16'
+          aria-label={isLiked ? 'like button' : 'unlike button'}
+        >
+          {isLiked ? <FaHeart /> : <FaRegHeart />}
+        </button>
+      </div> */
+}
+```
+
+While the second approach is more concise, the benefits of clarity, accessibility, and maintainability in the first approach generally outweigh the benefit of having less code.
+
+1. **Explicit Button States**
+
+   - The first approach clearly separates the two button states into distinct elements
+   - This makes it easier to read and understand exactly what will be rendered in each state
+   - It's more verbose but more explicit about the component's behavior
+
+2. **Accessibility Considerations**
+
+   - In the first approach, each button state has its own explicit `aria-label`
+   - The labels 'like button' and 'unlike button' are hardcoded, making it easier to audit accessibility
+   - The second approach uses a ternary for the `aria-label` which, while functional, is slightly less readable
+
+3. **Debugging and Testing**
+
+   - Having separate button elements makes it easier to:
+     - Set breakpoints for specific states
+     - Write more specific test selectors
+     - Debug styling or behavior issues for each state independently
+
+4. **Maintenance and Modifications**
+   - If you need to add different behaviors or styles for each state in the future, the separated approach makes it easier
+   - You won't need to add additional ternary operators or complex conditional logic
+   - Each state can be modified independently without affecting the other
+
+While the second approach is more concise, the benefits of clarity, accessibility, and maintainability in the first approach generally outweigh the benefit of having less code.
+
 ## Form Project
 
 - setup parent component
