@@ -209,14 +209,16 @@ describe('basic arithmetic checks', () => {
 
 Vitest and React Testing Library (RTL) serve different but complementary purposes in testing React applications. Vitest is a test runner that provides the basic structure (describe, test) and assertions (expect) needed to execute tests. While similar to Jest, Vitest offers better performance and seamless Vite integration. When testing React components (as shown in the App.test.tsx example above), you need React Testing Library alongside Vitest. RTL provides the essential tools to render components, query the DOM, and simulate user interactions, while Vitest handles running the tests and managing assertions. You can think of Vitest as the engine that runs your tests, while RTL is the specialized toolkit for testing React components from a user's perspective. This allows you to write comprehensive tests that verify both component behavior and user interactions.
 
-## Setup
+## Tutorial
+
+Alright, once we are clear with the major concepts and libraries, let's start practicing by writing our first test.
 
 - stop the test runner (CTRL + C)
 - optional: remove App.test.tsx and random.test.ts
 - explore ./src/tutorial
   - where we will be writing our tests and setting up our components
 - explore ./src/final
-  - folder contains all solutions (source code) and is excluded from the test
+  - folder contains all solutions (source code) and is excluded from the test runner
 - vite.config.ts
 
 ```ts
@@ -284,7 +286,10 @@ export default Sandbox;
 ```
 
 React Testing Library Query Methods
-getByText, queryByText, getAllByText, queryAllByText, findByText, findAllByText
+
+When testing your components, quite often you will need to query the DOM to find specific elements. One of the most commonly used options is search based on text content. Another option is search based on the role of the element, which we will cover later.
+
+getByText, queryByText, findByText, getAllByText, queryAllByText, findAllByText
 
 Here are the key differences between these React Testing Library query methods:
 
@@ -326,8 +331,21 @@ Single vs All
   ./src/tutorial/01-search-by-text/Sandbox.test.tsx
 
   - test whether heading renders correctly
-  - test whether paragraph renders correctly
-  - test whether paragraph with phone number renders correctly
+  - use `getByText` to find exact match "React Testing Library Examples"
+  - verify heading exists in document
+
+- test whether paragraph with phone number renders correctly
+  - use `getByText` with regex pattern `/\d{3}-\d{3}-\d{4}/`
+  - verify phone number text exists in document
+- test whether error message is initially absent
+  - use `queryByText` to check for "Error message"
+  - verify element does not exist in document
+- test whether multiple list items render correctly
+  - use `getAllByText` to find all elements with text "Item 1"
+  - verify exactly 3 items are present
+- test whether async message appears after delay
+  - use `findByText` to wait for "Async message" to appear
+  - verify message exists in document after async operation
 
 ```tsx
 import { render, screen } from '@testing-library/react';
@@ -336,11 +354,11 @@ import Sandbox from './Sandbox';
 describe('01-search-by-text', () => {
   test('demonstrates different query methods', async () => {
     render(<Sandbox />);
-
+    screen.debug();
     // 1. getByText - exact string match
     const heading = screen.getByText('React Testing Library Examples');
     expect(heading).toBeInTheDocument();
-
+    expect(screen.getByText(/react/i)).toBeInTheDocument();
     // 2. getByText with regex - phone number
     const phoneRegex = /\d{3}-\d{3}-\d{4}/;
     const phoneText = screen.getByText(phoneRegex);
@@ -362,6 +380,8 @@ describe('01-search-by-text', () => {
 ```
 
 ## TDD Example
+
+Let's quickly cover what is TDD or Test Driven Development and work on a simple example.
 
 TDD (Test-Driven Development) is a programming approach where you write tests before writing the actual code. First, you write a failing test that describes what you want your code to do. Then, you write just enough code to make that test pass. Finally, you improve your code while keeping the tests passing. This cycle is known as "red-green-refactor" - red because the test fails initially (showing in red), and green because the test passes after writing the code (showing in green).
 
@@ -417,7 +437,7 @@ function Sandbox() {
 export default Sandbox;
 ```
 
-## getByRole
+## search by role
 
 ./src/tutorial/03-search-by-role/Sandbox.tsx
 
@@ -467,9 +487,18 @@ const Sandbox = () => {
 export default Sandbox;
 ```
 
-getByRole and getByText are widely used because they closely mirror how users interact with your application. getByText is intuitive as it finds elements by their visible content, just like users would read them. However, getByRole is often superior because it ensures your app is accessible - it works with the same ARIA roles that screen readers use. For example, when testing a button that only contains an icon (no text), getByText wouldn't work, but getByRole('button') would find it correctly:
+- [Compare Queries](https://testing-library.com/docs/queries/about)
 
-getByRole, queryByRole, getAllByRole, queryAllByRole, findByRole, findAllByRole
+  ![Queries in RTL](./public/queries.png)
+
+So far we have learned about search by text content methods, which find elements by their visible content, just like users would read them but there is another option, often superior, which is search by role. I will discuss why search by role is superior in a moment for now let's learn about the different query methods.
+
+getByRole and getByText are widely used because they closely mirror how users interact with your application. getByText is intuitive as it finds elements by their visible content, just like users would read them. However, getByRole is often superior because it ensures your app is accessible - it works with the same ARIA roles that screen readers use.
+
+In short queryByRole is superior to queryByText because it ensures your app is accessible.
+If you
+
+getByRole, queryByRole, findByRole, getAllByRole, queryAllByRole, findAllByRole
 
 ### 1. getBy... Methods
 
@@ -590,8 +619,6 @@ describe('Sandbox Component', () => {
 
     expect(screen.getByRole('link', { name: 'Home' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'About' })).toBeInTheDocument();
-    // log the url to the playground
-    console.log(screen.logTestingPlaygroundURL());
   });
 
   test('renders headings with correct hierarchy', () => {
@@ -646,6 +673,179 @@ describe('Sandbox Component', () => {
 });
 ```
 
+## User Interactions
+
+Alright, once we know how to query elements, we can start learning how to test user interactions - things like clicking, typing, selecting options, etc. We will start slowly with simple button clicks, and in the following chapter we will build a more complex example where we will test interactions like typing into input fields and other cool features. During this chapter I will introduce you to both options we have for user interactions: `userEvent` and `fireEvent` but in general `userEvent` is the best option.You can read more about the difference between `userEvent` and `fireEvent` below or utilize [this url](https://testing-library.com/docs/user-event/intro/#differences-with-fireevent)
+
+### Why `userEvent` is Better Than `fireEvent`
+
+While both `userEvent` and `fireEvent` can simulate user interactions in tests, `userEvent` is the better choice for a few key reasons:
+
+1. **More Realistic**: `userEvent` simulates how real users interact with your app. For example, when a user types, they first click the input, then press keys one by one. `userEvent` follows this same pattern, while `fireEvent` just changes the value directly.
+
+2. **Catches More Issues**: Because `userEvent` is more realistic, it can find bugs that `fireEvent` might miss. For instance, `userEvent` will fail if a button is covered by another element, just like a real user couldn't click it.
+
+3. **Simpler to Use**: `userEvent` has clearer method names that match what users actually do, like `click()`, `type()`, and `selectOptions()`. This makes tests easier to read and write.
+
+4. **More Complete**: `userEvent` handles many small details automatically. When you click with `userEvent`, it triggers focus events, mouse events, and more - just like a real browser would.
+
+It's worth noting that `userEvent` is actually built on top of `fireEvent`. While `userEvent` covers most testing needs, there are some special cases where we still need to use `fireEvent` directly (like testing some specific browser events). But for most day-to-day testing, `userEvent` is the way to go.
+
+src/tutorial/04-user-interactions/Sandbox.tsx
+
+```tsx
+import { useState } from 'react';
+import { FaHeart } from 'react-icons/fa';
+import { FaRegHeart } from 'react-icons/fa';
+
+const Sandbox = () => {
+  const [count, setCount] = useState(0);
+  const [isLiked, setIsLiked] = useState(false);
+
+  const handleIncrease = () => {
+    setCount(count + 1);
+  };
+
+  const handleDecrease = () => {
+    setCount(count - 1);
+  };
+
+  const handleToggleLike = () => {
+    setIsLiked(!isLiked);
+  };
+
+  return (
+    <div className='p-8 text-center'>
+      <h2 className='text-2xl font-bold mb-4'>Count: {count}</h2>
+      <button
+        onClick={handleIncrease}
+        className='bg-blue-500 text-white px-4 py-2 rounded mr-2'
+      >
+        Increase
+      </button>
+      <button
+        onClick={handleDecrease}
+        className='bg-red-500 text-white px-4 py-2 rounded'
+      >
+        Decrease
+      </button>
+      <div>
+        {isLiked ? (
+          <button
+            onClick={handleToggleLike}
+            className='block mx-auto text-2xl text-red-500 mt-16'
+            aria-label='like button'
+          >
+            <FaHeart />
+          </button>
+        ) : (
+          <button
+            onClick={handleToggleLike}
+            className='block mx-auto text-2xl text-red-500 mt-16'
+            aria-label='unlike button'
+          >
+            <FaRegHeart />
+          </button>
+        )}
+      </div>
+      {/* <div>
+        <button
+          onClick={handleToggleLike}
+          className='block mx-auto text-2xl text-red-500 mt-16'
+          aria-label={isLiked ? 'like button' : 'unlike button'}
+        >
+          {isLiked ? <FaHeart /> : <FaRegHeart />}
+        </button>
+      </div> */}
+    </div>
+  );
+};
+export default Sandbox;
+```
+
+### Challenge
+
+- create a test that:
+  - verifies the count is initially 0
+  - selects both buttons
+- Extra Credit :
+  - verifies the count is 1 after clicking the increase button
+  - verifies the count is 0 after clicking the decrease button
+
+src/tutorial/04-user-interactions/Sandbox.test.tsx
+
+```tsx
+import { render, screen, fireEvent } from '@testing-library/react';
+// need to install as separate package
+// "npm install @testing-library/user-event"
+// something we will cover/do in the next chapter (not required for this chapter)
+import userEvent from '@testing-library/user-event';
+import Sandbox from './Sandbox';
+
+describe('04-user-interactions', () => {
+  test('should increment and decrement count using fireEvent (legacy approach)', () => {
+    render(<Sandbox />);
+
+    const increaseButton = screen.getByRole('button', { name: /increase/i });
+    const decreaseButton = screen.getByRole('button', { name: /decrease/i });
+
+    expect(screen.getByText(/count: 0/i)).toBeInTheDocument();
+    // Using fireEvent (legacy way)
+    fireEvent.click(increaseButton);
+    expect(screen.getByText(/count: 1/i)).toBeInTheDocument();
+
+    fireEvent.click(decreaseButton);
+    expect(screen.getByText(/count: 0/i)).toBeInTheDocument();
+  });
+
+  // userEvent is preferred over fireEvent because:
+  // 1. It more closely simulates real user interactions
+  // 2. It fires multiple events that would occur in a real browser
+  // 3. It handles edge cases better (like keyboard navigation)
+  // 4. It's more maintainable and future-proof
+
+  test('should increment and decrement count using userEvent', async () => {
+    render(<Sandbox />);
+    const user = userEvent.setup();
+
+    const increaseButton = screen.getByRole('button', { name: /increase/i });
+    const decreaseButton = screen.getByRole('button', { name: /decrease/i });
+
+    // Initial count should be 0
+    expect(screen.getByText(/count: 0/i)).toBeInTheDocument();
+
+    // Using userEvent (preferred way)
+    await user.click(increaseButton);
+    expect(screen.getByText(/count: 1/i)).toBeInTheDocument();
+
+    await user.click(decreaseButton);
+    expect(screen.getByText(/count: 0/i)).toBeInTheDocument();
+  });
+
+  it('toggles between unlike and like buttons when clicked', async () => {
+    const user = userEvent.setup();
+    render(<Sandbox />);
+
+    // Initially shows unlike button (outline heart)
+    const unlikeButton = screen.getByRole('button', { name: 'unlike button' });
+    expect(unlikeButton).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'like button' })
+    ).not.toBeInTheDocument();
+
+    // Click unlike button
+    await user.click(unlikeButton);
+
+    // Should now show like button (filled heart)
+    const likeButton = screen.getByRole('button', { name: 'like button' });
+    expect(likeButton).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'unlike button' })
+    ).not.toBeInTheDocument();
+  });
+});
+```
+
 ## Form Project
 
 - setup parent component
@@ -654,11 +854,8 @@ describe('Sandbox Component', () => {
 - in form render
   - name, textbox, select, button
 - in list
+
   - render each item
-
-[Compare Queries](https://testing-library.com/docs/queries/about)
-
-![Queries in RTL](./public/queries.png)
 
 - first test whether textbox is in the document
 - then test whether it's empty

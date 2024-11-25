@@ -10,6 +10,7 @@ describe('04-user-interactions', () => {
     const increaseButton = screen.getByRole('button', { name: /increase/i });
     const decreaseButton = screen.getByRole('button', { name: /decrease/i });
 
+    expect(screen.getByText(/count: 0/i)).toBeInTheDocument();
     // Using fireEvent (legacy way)
     fireEvent.click(increaseButton);
     expect(screen.getByText(/count: 1/i)).toBeInTheDocument();
