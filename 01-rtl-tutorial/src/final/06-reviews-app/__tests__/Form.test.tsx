@@ -1,82 +1,90 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { describe, test, expect, vi } from 'vitest';
 import ReviewForm from '../Form';
 
-beforeEach(() => {
-  render(<ReviewForm />);
-});
+export const getFormElements = () => {
+  const emailInput = screen.getByRole('textbox', { name: /email/i });
+  const ratingSelect = screen.getByRole('combobox', { name: /rating/i });
+  const textArea = screen.getByRole('textbox', { name: /your review/i });
+  const submitButton = screen.getByRole('button', { name: /submit review/i });
 
-const getFormElements = () => ({
-  emailInput: screen.getByRole('textbox', { name: /email/i }),
-  ratingSelect: screen.getByRole('combobox', { name: /rating/i }),
-  reviewInput: screen.getByRole('textbox', { name: /your review/i }),
-  submitButton: screen.getByRole('button', { name: /submit review/i }),
-});
+  return {
+    emailInput,
+    ratingSelect,
+    textArea,
+    submitButton,
+  };
+};
 
 describe('ReviewForm', () => {
-  test('renders all form elements', () => {
-    const elements = getFormElements();
+  // Creates a mock function that will simulate the form submission handler
+  const mockOnSubmit = vi.fn();
 
-    expect(elements.emailInput).toHaveValue('');
-    expect(elements.ratingSelect).toHaveValue('');
-    expect(elements.reviewInput).toHaveValue('');
-    expect(elements.submitButton).toBeInTheDocument();
-  });
-  test('ensures all inputs have required attribute', () => {
-    const elements = getFormElements();
-
-    expect(elements.emailInput).toHaveAttribute('required');
-    expect(elements.ratingSelect).toHaveAttribute('required');
-    expect(elements.reviewInput).toHaveAttribute('required');
-  });
-  test('allows typing in all input fields', async () => {
-    const user = userEvent.setup();
-    const { emailInput, ratingSelect, reviewInput } = getFormElements();
-
-    await user.type(emailInput, 'test@example.com');
-    expect(emailInput).toHaveValue('test@example.com');
-
-    await user.selectOptions(ratingSelect, '4');
-    expect(ratingSelect).toHaveValue('4');
-
-    await user.type(reviewInput, 'Great product!');
-    expect(reviewInput).toHaveValue('Great product!');
+  // Before each test runs:
+  beforeEach(() => {
+    // Clear all information about how the mock was called
+    // This ensures each test starts with a fresh mock function
+    // without any previous calls recorded
+    mockOnSubmit.mockClear();
   });
 
-  test('shows validation error for review text that is less than 10 characters', async () => {
-    const user = userEvent.setup();
-    const elements = getFormElements();
-
-    expect(
-      screen.queryByText(/review must be at least 10 characters long/i)
-    ).not.toBeInTheDocument();
-
-    await user.type(elements.emailInput, 'test@example.com');
-    await user.selectOptions(elements.ratingSelect, '4');
-    await user.type(elements.reviewInput, 'Short');
-    await user.click(elements.submitButton);
-    expect(
-      screen.getByText(/review must be at least 10 characters long/i)
-    ).toBeInTheDocument();
-  });
-
-  test('successfully submits form with valid data', async () => {
-    const user = userEvent.setup();
-    const { emailInput, ratingSelect, reviewInput, submitButton } =
+  test('renders form elements correctly', () => {
+    render(<ReviewForm onSubmit={mockOnSubmit} />);
+    const { emailInput, ratingSelect, textArea, submitButton } =
       getFormElements();
-    expect(screen.queryByRole('article')).not.toBeInTheDocument();
+    expect(emailInput).toHaveValue('');
+    expect(ratingSelect).toHaveValue('');
+    expect(textArea).toHaveValue('');
+    expect(submitButton).toBeInTheDocument();
+  });
+
+  test('shows error message when review is too short', async () => {
+    const user = userEvent.setup();
+    render(<ReviewForm onSubmit={mockOnSubmit} />);
+
+    // since inputs have html required attribute, all of them need to be filled, in order test short review error
+
+    const { emailInput, ratingSelect, textArea, submitButton } =
+      getFormElements();
 
     await user.type(emailInput, 'test@example.com');
     await user.selectOptions(ratingSelect, '5');
-    await user.type(reviewInput, 'This is a great product review');
+    await user.type(textArea, 'Short');
     await user.click(submitButton);
 
-    // Form should be cleared after successful submission
+    expect(
+      screen.getByText(/review must be at least 10 characters long/i)
+    ).toBeInTheDocument();
+    expect(mockOnSubmit).not.toHaveBeenCalled();
+  });
+
+  test('submits form with valid data', async () => {
+    const user = userEvent.setup();
+    render(<ReviewForm onSubmit={mockOnSubmit} />);
+
+    const { emailInput, ratingSelect, textArea, submitButton } =
+      getFormElements();
+
+    await user.type(emailInput, 'test@example.com');
+    await user.selectOptions(ratingSelect, '5');
+    await user.type(
+      textArea,
+      'This is a valid review text that is long enough'
+    );
+    await user.click(submitButton);
+
+    // We can validate the form submission because mockOnSubmit is a mock function (vi.fn())
+    // that keeps track of all calls made to it. This allows us to verify:
+    expect(mockOnSubmit).toHaveBeenCalledWith({
+      email: 'test@example.com',
+      rating: '5',
+      text: 'This is a valid review text that is long enough',
+    });
+
+    // Check if form is reset after submission
     expect(emailInput).toHaveValue('');
     expect(ratingSelect).toHaveValue('');
-    expect(reviewInput).toHaveValue('');
-
-    // Review should be displayed in the list
-    expect(screen.getAllByRole('article')).toHaveLength(1);
+    expect(textArea).toHaveValue('');
   });
 });

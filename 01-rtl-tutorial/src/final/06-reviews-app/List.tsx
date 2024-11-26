@@ -1,8 +1,12 @@
-import { Review } from './Form';
+import { Review } from './Sandbox';
 
-const List = ({ reviews }: { reviews: Review[] }) => {
+type ListProps = {
+  reviews: Review[];
+};
+
+const List = ({ reviews }: ListProps) => {
   return (
-    <div className='space-y-4'>
+    <div className='mt-8'>
       <h2 className='text-xl font-bold'>Reviews</h2>
       {reviews.length === 0 ? (
         <p>No reviews yet</p>

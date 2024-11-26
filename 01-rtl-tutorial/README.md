@@ -997,6 +997,14 @@ describe('inputs should be initially empty', () => {
 
 userEvent.setup() goes before render() to make sure all the fake mouse and keyboard stuff is ready before your component appears, just like in a real browser.
 
+Yes, `userEvent.setup()` should ideally be called before `render()`. Here's why:
+
+- `userEvent.setup()` initializes the user event utilities and prepares them for use.
+- `render()` renders the component into the testing environment.
+- By calling `userEvent.setup()` before `render()`, you ensure that the user event utilities are ready to be used when the component is rendered.
+
+This setup ensures that all user interactions are properly simulated and recorded, providing a more accurate and reliable testing environment. While the code might still work with userEvent.setup() after render(), following this order ensures the most reliable test behavior and follows the established testing patterns in the React community.
+
 ## Verify Error Message
 
 ```tsx
@@ -1448,3 +1456,375 @@ describe('inputs should be initially empty', () => {
 - if we nest components, screen.debug() will show the elements in the nested components
 
 ## Reviews App
+
+- create Form and List components and render them in Sandbox
+
+tutorial/06-reviews-app/Sandbox.tsx
+
+```tsx
+import { useState } from 'react';
+import Form from './Form';
+import List from './List';
+
+export type Review = {
+  email: string;
+  rating: string;
+  text: string;
+};
+
+const Sandbox = () => {
+  const [reviews, setReviews] = useState<Review[]>([]);
+
+  const addReview = (review: Review) => {
+    setReviews([...reviews, review]);
+  };
+  return (
+    <div className='max-w-xl mx-auto p-8'>
+      <h1 className='text-2xl font-bold mb-8'>Reviews App</h1>
+      <Form onSubmit={addReview} />
+      <List reviews={reviews} />
+    </div>
+  );
+};
+export default Sandbox;
+```
+
+tutorial/06-reviews-app/Form.tsx
+
+```tsx
+import { useState, FormEvent } from 'react';
+import { Review } from './Sandbox';
+
+type ReviewFormProps = {
+  onSubmit: (review: Review) => void;
+};
+
+const ReviewForm = ({ onSubmit }: ReviewFormProps) => {
+  const [email, setEmail] = useState('');
+  const [rating, setRating] = useState('');
+  const [text, setText] = useState('');
+  const [textError, setTextError] = useState('');
+
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (text.length >= 10) {
+      const newReview = { email, rating, text };
+      onSubmit(newReview);
+      setEmail('');
+      setRating('');
+      setText('');
+      setTextError('');
+    } else {
+      setTextError('Review must be at least 10 characters long');
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className='space-y-4 mb-8'>
+      <div>
+        <label htmlFor='email' className='block mb-2'>
+          Email
+        </label>
+        <input
+          type='email'
+          id='email'
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className='w-full border p-2 rounded'
+          required
+        />
+      </div>
+
+      <div>
+        <label htmlFor='rating' className='block mb-2'>
+          Rating
+        </label>
+        <select
+          id='rating'
+          value={rating}
+          onChange={(e) => setRating(e.target.value)}
+          className='w-full border p-2 rounded'
+          required
+        >
+          <option value=''>Select rating</option>
+          {[5, 4, 3, 2, 1].map((num) => (
+            <option key={num} value={num}>
+              {num} star{num !== 1 ? 's' : ''}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div>
+        <label htmlFor='text' className='block mb-2'>
+          Your Review
+        </label>
+        <textarea
+          id='text'
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          className='w-full border p-2 rounded'
+          rows={4}
+          required
+        />
+        {textError && <p className='text-red-500 text-sm mt-1'>{textError}</p>}
+      </div>
+
+      <button
+        type='submit'
+        className='bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600'
+      >
+        Submit Review
+      </button>
+    </form>
+  );
+};
+
+export default ReviewForm;
+```
+
+tutorial/06-reviews-app/List.tsx
+
+```tsx
+import { Review } from './Sandbox';
+
+type ListProps = {
+  reviews: Review[];
+};
+
+const List = ({ reviews }: ListProps) => {
+  return (
+    <div className='mt-8'>
+      <h2 className='text-xl font-bold'>Reviews</h2>
+      {reviews.length === 0 ? (
+        <p>No reviews yet</p>
+      ) : (
+        reviews.map((review, index) => (
+          <article key={index} className='border p-4 rounded'>
+            <div className='font-bold'>{review.email}</div>
+            <div className='text-yellow-500'>
+              {'⭐'.repeat(Number(review.rating))}
+            </div>
+            <p className='mt-2'>{review.text}</p>
+          </article>
+        ))
+      )}
+    </div>
+  );
+};
+
+export default List;
+```
+
+### Tests
+
+- create `__tests__` folder
+
+List.test.tsx
+
+```tsx
+import { render, screen } from '@testing-library/react';
+import { describe, test, expect } from 'vitest';
+import List from '../List';
+import { Review } from '../Sandbox';
+
+// Mock data is used to simulate real data that would typically come from an API or user input
+// This allows us to test our components in isolation without depending on external services
+const mockReviews: Review[] = [
+  {
+    email: 'test@example.com',
+    rating: '4',
+    text: 'Great product!',
+  },
+  {
+    email: 'user@example.com',
+    rating: '5',
+    text: 'Excellent service',
+  },
+];
+
+// show beforeEach example with props
+
+describe('List Component', () => {
+  test('displays "No reviews yet" when reviews array is empty', () => {
+    render(<List reviews={[]} />);
+    expect(screen.getByText('No reviews yet')).toBeInTheDocument();
+  });
+
+  test('renders reviews correctly when provided', () => {
+    render(<List reviews={mockReviews} />);
+
+    // Check if reviews header is present
+    expect(screen.getByText('Reviews')).toBeInTheDocument();
+
+    // Check if both reviews are rendered
+    mockReviews.forEach((review) => {
+      expect(screen.getByText(review.email)).toBeInTheDocument();
+      expect(screen.getByText(review.text)).toBeInTheDocument();
+      // Check if stars are rendered
+      const stars = '⭐'.repeat(Number(review.rating));
+      expect(screen.getByText(stars)).toBeInTheDocument();
+    });
+  });
+  // ALTERNATIVE : show how to test with articles in the DOM
+});
+```
+
+Form.test.tsx
+
+```tsx
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { describe, test, expect, vi } from 'vitest';
+import ReviewForm from '../Form';
+
+export const getFormElements = () => {
+  const emailInput = screen.getByRole('textbox', { name: /email/i });
+  const ratingSelect = screen.getByRole('combobox', { name: /rating/i });
+  const textArea = screen.getByRole('textbox', { name: /your review/i });
+  const submitButton = screen.getByRole('button', { name: /submit review/i });
+
+  return {
+    emailInput,
+    ratingSelect,
+    textArea,
+    submitButton,
+  };
+};
+
+describe('ReviewForm', () => {
+  // Creates a mock function that will simulate the form submission handler
+  const mockOnSubmit = vi.fn();
+
+  // Before each test runs:
+  beforeEach(() => {
+    // Clear all information about how the mock was called
+    // This ensures each test starts with a fresh mock function
+    // without any previous calls recorded
+    mockOnSubmit.mockClear();
+  });
+
+  test('renders form elements correctly', () => {
+    render(<ReviewForm onSubmit={mockOnSubmit} />);
+    const { emailInput, ratingSelect, textArea, submitButton } =
+      getFormElements();
+    expect(emailInput).toHaveValue('');
+    expect(ratingSelect).toHaveValue('');
+    expect(textArea).toHaveValue('');
+    expect(submitButton).toBeInTheDocument();
+  });
+
+  test('shows error message when review is too short', async () => {
+    const user = userEvent.setup();
+    render(<ReviewForm onSubmit={mockOnSubmit} />);
+
+    // since inputs have html required attribute, all of them need to be filled, in order test short review error
+
+    const { emailInput, ratingSelect, textArea, submitButton } =
+      getFormElements();
+
+    await user.type(emailInput, 'test@example.com');
+    await user.selectOptions(ratingSelect, '5');
+    await user.type(textArea, 'Short');
+    await user.click(submitButton);
+
+    expect(
+      screen.getByText(/review must be at least 10 characters long/i)
+    ).toBeInTheDocument();
+    expect(mockOnSubmit).not.toHaveBeenCalled();
+  });
+
+  test('submits form with valid data', async () => {
+    const user = userEvent.setup();
+    render(<ReviewForm onSubmit={mockOnSubmit} />);
+
+    const { emailInput, ratingSelect, textArea, submitButton } =
+      getFormElements();
+
+    await user.type(emailInput, 'test@example.com');
+    await user.selectOptions(ratingSelect, '5');
+    await user.type(
+      textArea,
+      'This is a valid review text that is long enough'
+    );
+    await user.click(submitButton);
+
+    // We can validate the form submission because mockOnSubmit is a mock function (vi.fn())
+    // that keeps track of all calls made to it. This allows us to verify:
+    expect(mockOnSubmit).toHaveBeenCalledWith({
+      email: 'test@example.com',
+      rating: '5',
+      text: 'This is a valid review text that is long enough',
+    });
+
+    // Check if form is reset after submission
+    expect(emailInput).toHaveValue('');
+    expect(ratingSelect).toHaveValue('');
+    expect(textArea).toHaveValue('');
+  });
+});
+```
+
+Sandbox.test.tsx
+
+- unit test
+  When we are testing the individual components, we are testing them in isolation and it's called a unit test.
+- integration test
+  This is an integration test, because it tests the interaction between the Form and List components.
+
+```tsx
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import Sandbox from '../Sandbox';
+import { getFormElements } from './Form.test.tsx';
+
+describe('Reviews App', () => {
+  // Basic rendering test
+  test('renders Reviews App title', () => {
+    render(<Sandbox />);
+    expect(screen.getByText(/reviews app/i)).toBeInTheDocument();
+  });
+
+  // Integration test for adding a review
+  test('adds a new review when form is submitted', async () => {
+    const user = userEvent.setup();
+    render(<Sandbox />);
+
+    // Get form elements
+    const { emailInput, ratingSelect, textArea, submitButton } =
+      getFormElements();
+
+    // Fill out the form
+    await user.type(emailInput, 'test@example.com');
+    await user.selectOptions(ratingSelect, '5');
+    await user.type(textArea, 'Great product!');
+
+    // Submit the form
+    await user.click(submitButton);
+
+    // Verify the review appears in the list
+    expect(screen.getByText('test@example.com')).toBeInTheDocument();
+    expect(screen.getByText('Great product!')).toBeInTheDocument();
+    expect(screen.getByText('⭐'.repeat(5))).toBeInTheDocument();
+  });
+  test('alternative - adds a new review when form is submitted', async () => {
+    const user = userEvent.setup();
+    render(<Sandbox />);
+
+    const reviews = screen.queryAllByRole('article');
+    expect(reviews).toHaveLength(0);
+    // Get form elements
+    const { emailInput, ratingSelect, textArea, submitButton } =
+      getFormElements();
+
+    // Fill out and submit form
+    await user.type(emailInput, 'test@example.com');
+    await user.selectOptions(ratingSelect, '5');
+    await user.type(textArea, 'Great product!');
+    await user.click(submitButton);
+
+    // Verify one new review was added
+    expect(screen.getAllByRole('article')).toHaveLength(1);
+  });
+});
+```
