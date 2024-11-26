@@ -909,19 +909,13 @@ While the second approach is more concise, the benefits of clarity, accessibilit
 
 While the second approach is more concise, the benefits of clarity, accessibility, and maintainability in the first approach generally outweigh the benefit of having less code.
 
-## Form Project
+## Form Testing
 
-- setup parent component
-  - state for list of users
-- render form and list
-- in form render
-  - name, textbox, select, button
-- in list
-
-  - render each item
-
-- first test whether textbox is in the document
-- then test whether it's empty
+- setup a form with following elements:
+  - email
+  - password
+  - confirm password
+  - submit button
 
 ```tsx
 const Sandbox = () => {
@@ -956,9 +950,6 @@ const Sandbox = () => {
 };
 export default Sandbox;
 ```
-
-- RTL only cares about the end result, not the implementation
-- if we nest components, screen.debug() will show the elements in the nested components
 
 ```tsx
 import { describe, test, expect } from 'vitest';
@@ -1452,3 +1443,8 @@ describe('inputs should be initially empty', () => {
   });
 });
 ```
+
+- RTL only cares about the end result, not the implementation
+- if we nest components, screen.debug() will show the elements in the nested components
+
+## Reviews App
