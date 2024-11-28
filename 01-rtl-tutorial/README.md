@@ -911,7 +911,11 @@ While the second approach is more concise, the benefits of clarity, accessibilit
 
 ## Form Testing
 
-And
+Alright and once we are familiar with fundamentals of testing user interactions, let's learn how to test forms. Since we'll be testing multiple form features, our test file will be quite long and at very end of the chapter I will show possible ways to refactor for better readability.
+
+Also, for this section, I recommend having your browser open since we'll want to see the form in action. Let's start by importing and rendering Sandbox.tsx in App.tsx.
+
+- import and render `src/tutorial/05-form-testing/Sandbox.tsx` in `App.tsx`
 
 - setup a form with following elements:
   - email
@@ -920,165 +924,87 @@ And
   - submit button
 
 ```tsx
-const Sandbox = () => {
-  return (
-    <div className='container my-5'>
-      <form>
-        <div className='mb-3'>
-          <label htmlFor='email' className='form-label'>
-            Email address
-          </label>
-          <input type='email' className='form-control' id='email' />
-        </div>
-        <div className='mb-3'>
-          <label htmlFor='password' className='form-label'>
-            Password
-          </label>
-          <input type='password' className='form-control' id='password' />
-        </div>
-        <div className='mb-3'>
-          <label htmlFor='confirmPassword' className='form-label'>
-            Confirm Password
-          </label>
-          <input
-            type='password'
-            className='form-control'
-            id='confirmPassword'
-          />
-        </div>
-      </form>
-    </div>
-  );
-};
-export default Sandbox;
-```
-
-```tsx
-import { describe, test, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import Sandbox from '../components/Sandbox';
-import userEvent from '@testing-library/user-event';
-describe('inputs should be initially empty', () => {
-  test('renders correctly', () => {
-    render(<Sandbox />);
-    screen.debug(); // Logs the DOM structure
-
-    const emailInputElement = screen.getByRole('textbox');
-    expect(emailInputElement).toHaveValue('');
-    // in order to test the password input, we need to get the element by its label text
-    // once we add confirm password, our regex will find multiple elements, so we need to use the exact label text
-    // const passwordInputElement = screen.getByLabelText(/password/i);
-    const passwordInputElement = screen.getByLabelText('Password');
-    expect(passwordInputElement).toHaveValue('');
-
-    const confirmPasswordInputElement =
-      screen.getByLabelText(/confirm password/i);
-    expect(confirmPasswordInputElement).toHaveValue('');
-  });
-  test('should be able to type in input', async () => {
-    const user = userEvent.setup();
-
-    render(<Sandbox />);
-    // email
-    const emailInputElement = screen.getByRole('textbox', { name: /email/i });
-    await user.type(emailInputElement, 'test@test.com');
-    expect(emailInputElement).toHaveValue('test@test.com');
-
-    // password
-    const passwordInputElement = screen.getByLabelText('Password');
-    await user.type(passwordInputElement, 'secret');
-    expect(passwordInputElement).toHaveValue('secret');
-    // confirm password
-    const confirmPasswordInputElement =
-      screen.getByLabelText(/confirm password/i);
-    await user.type(confirmPasswordInputElement, 'secret');
-    expect(confirmPasswordInputElement).toHaveValue('secret');
-  });
-});
-```
-
-userEvent.setup() goes before render() to make sure all the fake mouse and keyboard stuff is ready before your component appears, just like in a real browser.
-
-Yes, `userEvent.setup()` should ideally be called before `render()`. Here's why:
-
-- `userEvent.setup()` initializes the user event utilities and prepares them for use.
-- `render()` renders the component into the testing environment.
-- By calling `userEvent.setup()` before `render()`, you ensure that the user event utilities are ready to be used when the component is rendered.
-
-This setup ensures that all user interactions are properly simulated and recorded, providing a more accurate and reliable testing environment. While the code might still work with userEvent.setup() after render(), following this order ensures the most reliable test behavior and follows the established testing patterns in the React community.
-
-## Verify Error Message
-
-```tsx
 import { useState } from 'react';
 import validator from 'validator';
+
+const labelStyles = 'block text-grey-700 font-medium mb-2';
+const inputStyles = 'w-full px-3 py-2 border border-gray-300 rounded-md';
+const buttonsStyles =
+  'w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600';
+
+const defaultState = {
+  email: '',
+  password: '',
+  confirmPassword: '',
+};
+
 const Sandbox = () => {
-  const [signupInput, setSignupInput] = useState({
-    email: '',
-    password: '',
-    confirmPassword: '',
-  });
+  const [signupInput, setSignupInput] = useState(defaultState);
   const [error, setError] = useState('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
     setSignupInput({ ...signupInput, [id]: value });
   };
-
   const handleSubmit = (e: React.FormEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    console.log(signupInput);
-    // TODO: validate the form
     if (!validator.isEmail(signupInput.email)) {
       return setError('Invalid email');
     }
+    if (!validator.isLength(signupInput.password, { min: 5 })) {
+      return setError('Password must be at least 5 characters');
+    }
+    if (signupInput.password !== signupInput.confirmPassword) {
+      return setError('Passwords do not match');
+    }
+    setError('');
+    setSignupInput(defaultState);
   };
 
   return (
-    <div className='container my-5'>
-      <form>
+    <div className='container mx-auto max-w-md mt-10 p-6 bg-white rounded-lg shadow-md'>
+      <form className='space-y-4'>
+        {/* email input */}
         <div className='mb-3'>
-          <label htmlFor='email' className='form-label'>
+          <label htmlFor='email' className={labelStyles}>
             Email address
           </label>
           <input
             type='email'
-            className='form-control'
             id='email'
             value={signupInput.email}
             onChange={handleChange}
+            className={inputStyles}
           />
         </div>
+        {/* password */}
         <div className='mb-3'>
-          <label htmlFor='password' className='form-label'>
+          <label htmlFor='password' className={labelStyles}>
             Password
           </label>
           <input
             type='password'
-            className='form-control'
             id='password'
             value={signupInput.password}
             onChange={handleChange}
+            className={inputStyles}
           />
         </div>
+        {/* confirm password */}
         <div className='mb-3'>
-          <label htmlFor='confirmPassword' className='form-label'>
+          <label htmlFor='confirmPassword' className={labelStyles}>
             Confirm Password
           </label>
           <input
             type='password'
-            className='form-control'
             id='confirmPassword'
             value={signupInput.confirmPassword}
             onChange={handleChange}
+            className={inputStyles}
           />
         </div>
-        {error && <p className='text-danger mb-3'>{error}</p>}
-        <button
-          type='submit'
-          className='btn btn-primary'
-          onClick={handleSubmit}
-        >
+        {error && <p className='text-red-500 text-sm'>{error}</p>}
+        <button type='button' onClick={handleSubmit} className={buttonsStyles}>
           Submit
         </button>
       </form>
@@ -1087,6 +1013,127 @@ const Sandbox = () => {
 };
 export default Sandbox;
 ```
+
+```tsx
+import { render, screen, logRoles } from '@testing-library/react';
+import Sandbox from './Sandbox';
+import userEvent, { UserEvent } from '@testing-library/user-event';
+
+describe('05-form-testing', () => {
+  test('inputs should be initially empty', () => {
+    const { container } = render(<Sandbox />);
+    screen.debug();
+    logRoles(container);
+    const emailInputElement = screen.getByRole('textbox', { name: /email/i });
+    expect(emailInputElement).toHaveValue('');
+
+    const passwordInputElement = screen.getByLabelText('Password');
+    expect(passwordInputElement).toHaveValue('');
+
+    const confirmPasswordInputElement =
+      screen.getByLabelText(/confirm password/i);
+    expect(confirmPasswordInputElement).toHaveValue('');
+  });
+  test('should be able to type in the input', async () => {
+    const user = userEvent.setup();
+    render(<Sandbox />);
+    const emailInputElement = screen.getByRole('textbox', { name: /email/i });
+    await user.type(emailInputElement, 'test@test.com');
+    expect(emailInputElement).toHaveValue('test@test.com');
+
+    const passwordInputElement = screen.getByLabelText('Password');
+    await user.type(passwordInputElement, 'secret');
+    expect(passwordInputElement).toHaveValue('secret');
+
+    const confirmPasswordInputElement =
+      screen.getByLabelText(/confirm password/i);
+
+    await user.type(confirmPasswordInputElement, 'secret');
+    expect(confirmPasswordInputElement).toHaveValue('secret');
+  });
+});
+```
+
+```tsx
+import { render, screen, logRoles } from '@testing-library/react';
+import Sandbox from './Sandbox';
+import userEvent, { UserEvent } from '@testing-library/user-event';
+
+const getFormElements = () => {
+  const elements = {
+    emailInputElement: screen.getByRole('textbox', { name: /email/i }),
+    passwordInputElement: screen.getByLabelText('Password'),
+    confirmPasswordInputElement: screen.getByLabelText(/confirm password/i),
+    submitButton: screen.getByRole('button', { name: /submit/i }),
+  };
+  return elements;
+};
+
+## Refactor
+
+describe('05-form-testing', () => {
+  // Declare user variable at describe block level so it's accessible in all tests
+  let user: UserEvent;
+
+  // beforeEach runs before each test case
+  // Used to set up the testing environment in a consistent state
+  // This ensures each test starts with fresh DOM and user event instance
+  beforeEach(() => {
+    user = userEvent.setup();
+    render(<Sandbox />);
+  });
+
+  test('inputs should be initially empty', () => {
+    const { container } = render(<Sandbox />);
+    screen.debug();
+    logRoles(container);
+
+    const {
+      emailInputElement,
+      passwordInputElement,
+      confirmPasswordInputElement,
+    } = getFormElements();
+    expect(emailInputElement).toHaveValue('');
+    expect(passwordInputElement).toHaveValue('');
+    expect(confirmPasswordInputElement).toHaveValue('');
+  });
+  test('should be able to type in the input', async () => {
+    const {
+      emailInputElement,
+      passwordInputElement,
+      confirmPasswordInputElement,
+    } = getFormElements();
+
+    await user.type(emailInputElement, 'test@test.com');
+    expect(emailInputElement).toHaveValue('test@test.com');
+
+    await user.type(passwordInputElement, 'secret');
+    expect(passwordInputElement).toHaveValue('secret');
+
+    await user.type(confirmPasswordInputElement, 'secret');
+    expect(confirmPasswordInputElement).toHaveValue('secret');
+  });
+});
+```
+
+userEvent.setup() should be called before render() to make sure all the fake mouse and keyboard stuff is ready before your component appears, just like in a real browser.
+
+Here's why this order matters:
+
+1. `userEvent.setup()` initializes the user event utilities and prepares them for use
+2. `render()` renders the component into the testing environment
+3. Having setup first ensures the user event utilities are ready when the component renders
+
+While the code might still work with userEvent.setup() after render(), following this order ensures the most reliable test behavior and follows established testing patterns in the React community.
+
+Example:
+
+```tsx
+const user = userEvent.setup(); // First setup user events
+render(<MyComponent />); // Then render component
+```
+
+## Test Email Error
 
 ```tsx
 test('should show email error if email is invalid', async () => {
@@ -1107,7 +1154,7 @@ test('should show email error if email is invalid', async () => {
   await user.click(submitButtonElement);
 
   // Verify error message appears
-  const emailErrorElement = screen.queryByText(/invalid email/i);
+  const emailErrorElement = screen.getByText(/invalid email/i);
   expect(emailErrorElement).toBeInTheDocument();
 });
 ```
@@ -1121,7 +1168,7 @@ test('should show password error if password is less than 5 characters', async (
 
   // First verify error message is not present
   const passwordErrorElementBefore = screen.queryByText(
-    /password must be at least 8 characters/i
+    /password must be at least 5 characters/i
   );
   expect(passwordErrorElementBefore).not.toBeInTheDocument();
 
@@ -1133,7 +1180,7 @@ test('should show password error if password is less than 5 characters', async (
   const submitButtonElement = screen.getByRole('button', { name: /submit/i });
   await user.click(submitButtonElement);
 
-  const passwordErrorElement = screen.queryByText(
+  const passwordErrorElement = screen.getByText(
     /password must be at least 5 characters/i
   );
   expect(passwordErrorElement).toBeInTheDocument();
@@ -1165,95 +1212,9 @@ test('should show error if passwords do not match', async () => {
   const submitButtonElement = screen.getByRole('button', { name: /submit/i });
   await user.click(submitButtonElement);
 
-  const passwordErrorElement = screen.queryByText(/passwords do not match/i);
+  const passwordErrorElement = screen.findByText(/passwords do not match/i);
   expect(passwordErrorElement).toBeInTheDocument();
 });
-```
-
-## Sandbox File
-
-```tsx
-import { useState } from 'react';
-import validator from 'validator';
-const Sandbox = () => {
-  const [signupInput, setSignupInput] = useState({
-    email: '',
-    password: '',
-    confirmPassword: '',
-  });
-  const [error, setError] = useState('');
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { id, value } = e.target;
-    setSignupInput({ ...signupInput, [id]: value });
-  };
-
-  const handleSubmit = (e: React.FormEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    // TODO: validate the form
-    if (!validator.isEmail(signupInput.email)) {
-      return setError('Invalid email');
-    }
-    if (!validator.isLength(signupInput.password, { min: 5 })) {
-      return setError('Password must be at least 5 characters');
-    }
-    if (signupInput.password !== signupInput.confirmPassword) {
-      return setError('Passwords do not match');
-    }
-  };
-
-  return (
-    <div className='container my-5'>
-      <form>
-        <div className='mb-3'>
-          <label htmlFor='email' className='form-label'>
-            Email address
-          </label>
-          <input
-            type='email'
-            className='form-control'
-            id='email'
-            value={signupInput.email}
-            onChange={handleChange}
-          />
-        </div>
-        <div className='mb-3'>
-          <label htmlFor='password' className='form-label'>
-            Password
-          </label>
-          <input
-            type='password'
-            className='form-control'
-            id='password'
-            value={signupInput.password}
-            onChange={handleChange}
-          />
-        </div>
-        <div className='mb-3'>
-          <label htmlFor='confirmPassword' className='form-label'>
-            Confirm Password
-          </label>
-          <input
-            type='password'
-            className='form-control'
-            id='confirmPassword'
-            value={signupInput.confirmPassword}
-            onChange={handleChange}
-          />
-        </div>
-        {error && <p className='text-danger mb-3'>{error}</p>}
-        <button
-          type='submit'
-          className='btn btn-primary'
-          onClick={handleSubmit}
-        >
-          Submit
-        </button>
-      </form>
-    </div>
-  );
-};
-export default Sandbox;
 ```
 
 ## Show No Error Message
@@ -1263,7 +1224,7 @@ test('should show no error message if all inputs are valid', async () => {
   const user = userEvent.setup();
   render(<Sandbox />);
   const emailInputElement = screen.getByRole('textbox', { name: /email/i });
-  await user.type(emailInputElement, 'test@test.com');
+  await user.type(emailInputElement, 'test@example.com');
 
   const passwordInputElement = screen.getByLabelText('Password');
   await user.type(passwordInputElement, 'secret');
@@ -1454,10 +1415,10 @@ describe('inputs should be initially empty', () => {
 });
 ```
 
+## Reviews App
+
 - RTL only cares about the end result, not the implementation
 - if we nest components, screen.debug() will show the elements in the nested components
-
-## Reviews App
 
 - create Form and List components and render them in Sandbox
 
