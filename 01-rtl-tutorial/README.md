@@ -1054,6 +1054,8 @@ describe('05-form-testing', () => {
 });
 ```
 
+## Refactor
+
 ```tsx
 import { render, screen, logRoles } from '@testing-library/react';
 import Sandbox from './Sandbox';
@@ -1068,8 +1070,6 @@ const getFormElements = () => {
   };
   return elements;
 };
-
-## Refactor
 
 describe('05-form-testing', () => {
   // Declare user variable at describe block level so it's accessible in all tests
@@ -1137,25 +1137,14 @@ render(<MyComponent />); // Then render component
 
 ```tsx
 test('should show email error if email is invalid', async () => {
-  const user = userEvent.setup();
-  render(<Sandbox />);
+  const { emailInputElement, submitButton } = getFormElements();
 
-  // First verify error message is not present
-  // queryByText returns null if the element is not found
-  // getByText throws an error if the element is not found
-  // don't use the same variable since it's null so later we can't check if it's in the document
-  const emailErrorElementBefore = screen.queryByText(/invalid email/i);
-  expect(emailErrorElementBefore).not.toBeInTheDocument();
+  expect(screen.queryByText(/invalid email/i)).not.toBeInTheDocument();
 
-  // Trigger the error condition
-  const emailInputElement = screen.getByRole('textbox', { name: /email/i });
-  await user.type(emailInputElement, 'randomtext');
-  const submitButtonElement = screen.getByRole('button', { name: /submit/i });
-  await user.click(submitButtonElement);
+  await user.type(emailInputElement, 'invalid');
+  await user.click(submitButton);
 
-  // Verify error message appears
-  const emailErrorElement = screen.getByText(/invalid email/i);
-  expect(emailErrorElement).toBeInTheDocument();
+  expect(screen.getByText(/invalid email/i)).toBeInTheDocument();
 });
 ```
 
@@ -1163,255 +1152,83 @@ test('should show email error if email is invalid', async () => {
 
 ```tsx
 test('should show password error if password is less than 5 characters', async () => {
-  const user = userEvent.setup();
-  render(<Sandbox />);
+  const { emailInputElement, passwordInputElement, submitButton } =
+    getFormElements();
 
-  // First verify error message is not present
-  const passwordErrorElementBefore = screen.queryByText(
-    /password must be at least 5 characters/i
-  );
-  expect(passwordErrorElementBefore).not.toBeInTheDocument();
+  expect(
+    screen.queryByText(/password must be at least 5 characters/i)
+  ).not.toBeInTheDocument();
 
-  const emailInputElement = screen.getByRole('textbox', { name: /email/i });
   await user.type(emailInputElement, 'test@test.com');
+  await user.type(passwordInputElement, 'abcd');
+  await user.click(submitButton);
 
-  const passwordInputElement = screen.getByLabelText('Password');
-  await user.type(passwordInputElement, 'test');
-  const submitButtonElement = screen.getByRole('button', { name: /submit/i });
-  await user.click(submitButtonElement);
-
-  const passwordErrorElement = screen.getByText(
-    /password must be at least 5 characters/i
-  );
-  expect(passwordErrorElement).toBeInTheDocument();
+  expect(
+    screen.getByText(/password must be at least 5 characters/i)
+  ).toBeInTheDocument();
 });
 ```
 
 ## Verify Password Error
 
 ```tsx
-test('should show error if passwords do not match', async () => {
-  const user = userEvent.setup();
-  render(<Sandbox />);
-  // First verify error message is not present
-  const passwordErrorElementBefore = screen.queryByText(
-    /passwords do not match/i
-  );
-  expect(passwordErrorElementBefore).not.toBeInTheDocument();
+test('should show password error if password is less than 5 characters', async () => {
+  const { emailInputElement, passwordInputElement, submitButton } =
+    getFormElements();
 
-  const emailInputElement = screen.getByRole('textbox', { name: /email/i });
+  expect(
+    screen.queryByText(/password must be at least 5 characters/i)
+  ).not.toBeInTheDocument();
+
   await user.type(emailInputElement, 'test@test.com');
+  await user.type(passwordInputElement, 'abcd');
+  await user.click(submitButton);
 
-  const passwordInputElement = screen.getByLabelText('Password');
+  expect(
+    screen.getByText(/password must be at least 5 characters/i)
+  ).toBeInTheDocument();
+});
+test('should show error if passwords do not match', async () => {
+  const {
+    emailInputElement,
+    passwordInputElement,
+    confirmPasswordInputElement,
+    submitButton,
+  } = getFormElements();
+  expect(screen.queryByText(/passwords do not match/i)).not.toBeInTheDocument();
+
+  await user.type(emailInputElement, 'test@test.com');
   await user.type(passwordInputElement, 'secret');
-
-  const confirmPasswordInputElement =
-    screen.getByLabelText(/confirm password/i);
   await user.type(confirmPasswordInputElement, 'notsecret');
+  await user.click(submitButton);
 
-  const submitButtonElement = screen.getByRole('button', { name: /submit/i });
-  await user.click(submitButtonElement);
-
-  const passwordErrorElement = screen.findByText(/passwords do not match/i);
-  expect(passwordErrorElement).toBeInTheDocument();
+  expect(screen.getByText(/passwords do not match/i)).toBeInTheDocument();
 });
 ```
 
 ## Show No Error Message
 
 ```tsx
-test('should show no error message if all inputs are valid', async () => {
-  const user = userEvent.setup();
-  render(<Sandbox />);
-  const emailInputElement = screen.getByRole('textbox', { name: /email/i });
-  await user.type(emailInputElement, 'test@example.com');
-
-  const passwordInputElement = screen.getByLabelText('Password');
+test('valid inputs show no errors and clear fields', async () => {
+  const {
+    emailInputElement,
+    passwordInputElement,
+    confirmPasswordInputElement,
+    submitButton,
+  } = getFormElements();
+  await user.type(emailInputElement, 'test@test.com');
   await user.type(passwordInputElement, 'secret');
-
-  const confirmPasswordInputElement =
-    screen.getByLabelText(/confirm password/i);
   await user.type(confirmPasswordInputElement, 'secret');
+  await user.click(submitButton);
 
-  const submitButtonElement = screen.getByRole('button', { name: /submit/i });
-  await user.click(submitButtonElement);
-
-  const errorMessageElement = screen.queryByText(/invalid email/i);
-  expect(errorMessageElement).not.toBeInTheDocument();
-
-  const passwordErrorElement = screen.queryByText(
-    /password must be at least 5 characters/i
-  );
-  expect(passwordErrorElement).not.toBeInTheDocument();
-
-  const confirmPasswordErrorElement = screen.queryByText(
-    /passwords do not match/i
-  );
-  expect(confirmPasswordErrorElement).not.toBeInTheDocument();
-});
-```
-
-## Refactor
-
-utils-test.ts
-
-```ts
-import { describe, test, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import Sandbox from '../components/Sandbox';
-import userEvent, { UserEvent } from '@testing-library/user-event';
-import {
-  getFormElements,
-  fillForm,
-  validTestData,
-  FormElements,
-  expectNoErrors,
-} from './test-utils';
-
-describe('inputs should be initially empty', () => {
-  let formElements: FormElements;
-  let user: UserEvent;
-  beforeEach(() => {
-    user = userEvent.setup();
-    render(<Sandbox />);
-    formElements = getFormElements(screen);
-  });
-  test('DEBUG - component structure', () => {
-    screen.debug();
-  });
-
-  test('renders correctly', () => {
-    expect(formElements.emailInput).toHaveValue('');
-    expect(formElements.passwordInput).toHaveValue('');
-    expect(formElements.confirmPasswordInput).toHaveValue('');
-  });
-
-  test('should be able to type in input', async () => {
-    await fillForm(user, formElements, validTestData);
-
-    expect(formElements.emailInput).toHaveValue(validTestData.email);
-    expect(formElements.passwordInput).toHaveValue(validTestData.password);
-    expect(formElements.confirmPasswordInput).toHaveValue(
-      validTestData.confirmPassword
-    );
-  });
-
-  test('should show email error if email is invalid', async () => {
-    const emailErrorElementBefore = screen.queryByText(/invalid email/i);
-    expect(emailErrorElementBefore).not.toBeInTheDocument();
-
-    await fillForm(user, formElements, { email: 'randomtext' });
-    await user.click(formElements.submitButton);
-
-    const emailErrorElement = screen.queryByText(/invalid email/i);
-    expect(emailErrorElement).toBeInTheDocument();
-  });
-
-  test('should show password error if password is less than 5 characters', async () => {
-    const passwordErrorElementBefore = screen.queryByText(
-      /password must be at least 8 characters/i
-    );
-    expect(passwordErrorElementBefore).not.toBeInTheDocument();
-
-    await fillForm(user, formElements, {
-      email: validTestData.email,
-      password: 'test',
-    });
-    await user.click(formElements.submitButton);
-
-    const passwordErrorElement = screen.queryByText(
-      /password must be at least 5 characters/i
-    );
-    expect(passwordErrorElement).toBeInTheDocument();
-  });
-
-  test('should show no error message if all inputs are valid', async () => {
-    await fillForm(user, formElements, validTestData);
-    await user.click(formElements.submitButton);
-
-    expectNoErrors(screen);
-  });
-});
-```
-
-Sandbox.test.tsx
-
-```tsx
-import { describe, test, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import Sandbox from '../components/Sandbox';
-import userEvent, { UserEvent } from '@testing-library/user-event';
-import {
-  getFormElements,
-  fillForm,
-  validTestData,
-  FormElements,
-  expectNoErrors,
-} from './test-utils';
-
-describe('inputs should be initially empty', () => {
-  let formElements: FormElements;
-  let user: UserEvent;
-  beforeEach(() => {
-    user = userEvent.setup();
-    render(<Sandbox />);
-    formElements = getFormElements(screen);
-  });
-  test('DEBUG - component structure', () => {
-    screen.debug();
-  });
-
-  test('renders correctly', () => {
-    expect(formElements.emailInput).toHaveValue('');
-    expect(formElements.passwordInput).toHaveValue('');
-    expect(formElements.confirmPasswordInput).toHaveValue('');
-  });
-
-  test('should be able to type in input', async () => {
-    await fillForm(user, formElements, validTestData);
-
-    expect(formElements.emailInput).toHaveValue(validTestData.email);
-    expect(formElements.passwordInput).toHaveValue(validTestData.password);
-    expect(formElements.confirmPasswordInput).toHaveValue(
-      validTestData.confirmPassword
-    );
-  });
-
-  test('should show email error if email is invalid', async () => {
-    const emailErrorElementBefore = screen.queryByText(/invalid email/i);
-    expect(emailErrorElementBefore).not.toBeInTheDocument();
-
-    await fillForm(user, formElements, { email: 'randomtext' });
-    await user.click(formElements.submitButton);
-
-    const emailErrorElement = screen.queryByText(/invalid email/i);
-    expect(emailErrorElement).toBeInTheDocument();
-  });
-
-  test('should show password error if password is less than 5 characters', async () => {
-    const passwordErrorElementBefore = screen.queryByText(
-      /password must be at least 8 characters/i
-    );
-    expect(passwordErrorElementBefore).not.toBeInTheDocument();
-
-    await fillForm(user, formElements, {
-      email: validTestData.email,
-      password: 'test',
-    });
-    await user.click(formElements.submitButton);
-
-    const passwordErrorElement = screen.queryByText(
-      /password must be at least 5 characters/i
-    );
-    expect(passwordErrorElement).toBeInTheDocument();
-  });
-
-  test('should show no error message if all inputs are valid', async () => {
-    await fillForm(user, formElements, validTestData);
-    await user.click(formElements.submitButton);
-
-    expectNoErrors(screen);
-  });
+  expect(screen.queryByText(/invalid email/i)).not.toBeInTheDocument();
+  expect(
+    screen.queryByText(/password must be at least 5 characters/i)
+  ).not.toBeInTheDocument();
+  expect(screen.queryByText(/passwords do not match/i)).not.toBeInTheDocument();
+  expect(emailInputElement).toHaveValue('');
+  expect(passwordInputElement).toHaveValue('');
+  expect(confirmPasswordInputElement).toHaveValue('');
 });
 ```
 
