@@ -1133,6 +1133,35 @@ const user = userEvent.setup(); // First setup user events
 render(<MyComponent />); // Then render component
 ```
 
+### Vitest Hooks
+
+Also if you are interested, here are the other hooks that are available in Vitest:
+So depending on what you need to do, you can use the appropriate hook.
+
+```tsx
+import { beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
+
+// Runs once before all tests
+beforeAll(() => {
+  // Setup that needs to happen once before any tests run
+});
+
+// Runs once after all tests complete
+afterAll(() => {
+  // Cleanup that needs to happen once after all tests finish
+});
+
+// Runs before each individual test
+beforeEach(() => {
+  // Setup that needs to happen before every test
+});
+
+// Runs after each individual test
+afterEach(() => {
+  // Cleanup that needs to happen after every test
+});
+```
+
 ## Test Email Error
 
 ```tsx
