@@ -1162,6 +1162,35 @@ afterEach(() => {
 });
 ```
 
+Common use cases for each hook:
+
+1. beforeAll:
+
+   - Database connections
+   - Setting up test servers
+   - Loading shared test data
+   - One-time expensive setup operations
+
+2. afterAll:
+
+   - Closing database connections
+   - Shutting down test servers
+   - Cleaning up test files/data
+   - Final cleanup operations
+
+3. beforeEach:
+
+   - Resetting test state
+   - Setting up fresh test data
+   - Initializing component renders
+   - Setting up new mock implementations
+
+4. afterEach:
+   - Clearing mocks
+   - Cleaning up DOM
+   - Resetting component state
+   - Clearing temporary test data
+
 ## Test Email Error
 
 ```tsx
@@ -1201,22 +1230,6 @@ test('should show password error if password is less than 5 characters', async (
 ## Verify Password Error
 
 ```tsx
-test('should show password error if password is less than 5 characters', async () => {
-  const { emailInputElement, passwordInputElement, submitButton } =
-    getFormElements();
-
-  expect(
-    screen.queryByText(/password must be at least 5 characters/i)
-  ).not.toBeInTheDocument();
-
-  await user.type(emailInputElement, 'test@test.com');
-  await user.type(passwordInputElement, 'abcd');
-  await user.click(submitButton);
-
-  expect(
-    screen.getByText(/password must be at least 5 characters/i)
-  ).toBeInTheDocument();
-});
 test('should show error if passwords do not match', async () => {
   const {
     emailInputElement,
@@ -1263,8 +1276,7 @@ test('valid inputs show no errors and clear fields', async () => {
 
 ## Reviews App
 
-- RTL only cares about the end result, not the implementation
-- if we nest components, screen.debug() will show the elements in the nested components
+Alright and at very end of the tutorial, let's put everything together and create a bigger application with a form and a list of reviews and of course test it with RTL. This is a good time to challenge yourself by building the application first and then try to implement the tests yourself before watching the solution. Even if you can't finish it, you will learn a lot from the solution and it will be a good experience for you.
 
 - create Form and List components and render them in Sandbox
 
@@ -1404,12 +1416,12 @@ type ListProps = {
 const List = ({ reviews }: ListProps) => {
   return (
     <div className='mt-8'>
-      <h2 className='text-xl font-bold'>Reviews</h2>
+      <h2 className='text-xl font-bold mb-4'>Reviews</h2>
       {reviews.length === 0 ? (
         <p>No reviews yet</p>
       ) : (
         reviews.map((review, index) => (
-          <article key={index} className='border p-4 rounded'>
+          <article key={index} className='border p-4 rounded mb-4'>
             <div className='font-bold'>{review.email}</div>
             <div className='text-yellow-500'>
               {'⭐'.repeat(Number(review.rating))}
@@ -1424,6 +1436,9 @@ const List = ({ reviews }: ListProps) => {
 
 export default List;
 ```
+
+- RTL only cares about the end result, not the implementation
+- if we nest components, screen.debug() will show the elements in the nested components
 
 ### Tests
 
@@ -1455,6 +1470,13 @@ const mockReviews: Review[] = [
 // show beforeEach example with props
 
 describe('List Component', () => {
+  test('renders heading', () => {
+    render(<List reviews={mockReviews} />);
+    expect(
+      screen.getByRole('heading', { level: 2, name: /reviews/i })
+    ).toBeInTheDocument();
+  });
+
   test('displays "No reviews yet" when reviews array is empty', () => {
     render(<List reviews={[]} />);
     expect(screen.getByText('No reviews yet')).toBeInTheDocument();
@@ -1462,9 +1484,6 @@ describe('List Component', () => {
 
   test('renders reviews correctly when provided', () => {
     render(<List reviews={mockReviews} />);
-
-    // Check if reviews header is present
-    expect(screen.getByText('Reviews')).toBeInTheDocument();
 
     // Check if both reviews are rendered
     mockReviews.forEach((review) => {
@@ -1576,6 +1595,8 @@ describe('ReviewForm', () => {
 
 Sandbox.test.tsx
 
+So far all our examples where unit tests, because we were testing the individual components, however, we can also test the interaction between the components. This is called an integration test, and we are going to see in action when testing our Sandbox component
+
 - unit test
   When we are testing the individual components, we are testing them in isolation and it's called a unit test.
 - integration test
@@ -1591,7 +1612,9 @@ describe('Reviews App', () => {
   // Basic rendering test
   test('renders Reviews App title', () => {
     render(<Sandbox />);
-    expect(screen.getByText(/reviews app/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { level: 1, name: /reviews app/i })
+    ).toBeInTheDocument();
   });
 
   // Integration test for adding a review
