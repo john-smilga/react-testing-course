@@ -118,8 +118,9 @@ export default List;
 ## Form Tests
 
 `src/__tests__/Form.test.tsx`
+Alright, and once we have the components setup, we can start writing tests and I'm going to start with the Form component. Since it's our first test, I will setup all my test cases one by one and then right away work in the component but later we will write all our tests in one go.
 
-For the Form component I'm going to setup tests one by one but you can set all of them at once.
+If you are up for a challenge, in the Readme you will find all the steps I took to write Form component tests. So if you are interested, pause the video and give it a shot, if not, just follow along.
 
 1. Set up the test environment:
 
@@ -329,7 +330,6 @@ export default Form;
 ```tsx
 // 2. Test submits form with entered values
 test('submits form with entered values', async () => {
-  render(<Form onSubmit={mockOnSubmit} />);
   const { titleInput, descriptionInput, categorySelect, submitButton } =
     getElements();
 
@@ -363,7 +363,6 @@ Since we use html input `required` attribute, test will pass right away if we do
 ```tsx
 // 3. Test validates required fields
 test('validates required fields', async () => {
-  render(<Form onSubmit={mockOnSubmit} />);
   const { submitButton } = getElements();
   await user.click(submitButton);
   expect(mockOnSubmit).not.toHaveBeenCalled();
@@ -384,7 +383,6 @@ const handleSubmit = (e: React.FormEvent) => {
 ```tsx
 // 4. Test clears form after successful submission
 test('clears form after successful submission', async () => {
-  render(<Form onSubmit={mockOnSubmit} />);
   const { titleInput, descriptionInput, categorySelect, submitButton } =
     getElements();
 
