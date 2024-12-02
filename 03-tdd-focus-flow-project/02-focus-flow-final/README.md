@@ -190,12 +190,11 @@ describe('Form Component', () => {
   beforeEach(() => {
     mockOnSubmit.mockClear();
     user = userEvent.setup();
+    render(<Form onSubmit={mockOnSubmit} />);
   });
 
   // 1. Test renders form with empty fields initially
   test('renders form with empty fields initially', () => {
-    render(<Form onSubmit={mockOnSubmit} />);
-
     const { titleInput, descriptionInput, categorySelect } = getElements();
 
     expect(titleInput).toHaveValue('');
@@ -204,7 +203,6 @@ describe('Form Component', () => {
   });
   // 2. Test submits form with entered values
   test('submits form with entered values', async () => {
-    render(<Form onSubmit={mockOnSubmit} />);
     const { titleInput, descriptionInput, categorySelect, submitButton } =
       getElements();
 
@@ -221,14 +219,12 @@ describe('Form Component', () => {
   });
   // 3. Test validates required fields
   test('validates required fields', async () => {
-    render(<Form onSubmit={mockOnSubmit} />);
     const { submitButton } = getElements();
     await user.click(submitButton);
     expect(mockOnSubmit).not.toHaveBeenCalled();
   });
   // 4. Test clears form after successful submission
   test('clears form after successful submission', async () => {
-    render(<Form onSubmit={mockOnSubmit} />);
     const { titleInput, descriptionInput, categorySelect, submitButton } =
       getElements();
 
