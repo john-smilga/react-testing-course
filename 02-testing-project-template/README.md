@@ -1,3 +1,7 @@
+# Testing Project Template
+
+As promised in this course section, I will show you how to create a project template with Vite, TypeScript, Vitest, and React Testing Library, so you can use it as a starting point for your own projects. Before we start, I want to mention that if you get stuck or encounter any issues, you can always reference the `02-testing-project-template`, including the README file where you will find all of the commands and code we are going to write in this course section.
+
 A brief walkthrough on how to set up Vite (TypeScript Template), Vitest, and React Testing Library.
 
 [Article](https://johnsmilga.com/articles/2024/10/15)
@@ -54,18 +58,13 @@ Since we want to test our React components, we need to install React Testing Lib
 
 ```bash
 # Core testing utilities for React components
-npm install @testing-library/react @testing-library/jest-dom --save-dev
+npm install @testing-library/react @testing-library/jest-dom jsdom @testing-library/user-event --save-dev
 ```
 
-```bash
-# Simulates a browser-like environment for tests to run in Node.js
-npm install jsdom --save-dev
-```
-
-```bash
-# Simulates user interactions (clicks, typing, etc.) in tests
-npm install @testing-library/user-event --save-dev
-```
+`@testing-library/react` - Core testing utilities for React components
+`@testing-library/jest-dom` - Custom matchers to simplify assertions
+`jsdom` - Simulates a browser-like environment for tests to run in Node.js
+`@testing-library/user-event` - Simulates user interactions (clicks, typing, etc.) in tests
 
 Add the test object to vite.config.ts:
 
@@ -103,24 +102,22 @@ afterEach(() => {
 Make some changes in the vite.config.ts file:
 
 ```ts
-import { defineConfig } from 'vite';
+// Import defineConfig from vitest/config
+import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
   test: {
+    // Enable global variables for testing
     globals: true,
+    // Use jsdom as the environment
     environment: 'jsdom',
+    // Path to the setup file
     setupFiles: './src/vitest.setup.ts',
   },
 });
-```
-
-Lastly, to fix the TypeScript errors, we need to change the import in our vite.config.ts file. Now we need to import defineConfig from vitest/config:
-
-```ts
-import { defineConfig } from 'vitest/config';
 ```
 
 We also need to add the following code to our tsconfig.app.json file, which allows us to use Vitest's global functions like describe, it, and expect without needing to import them explicitly. If you’re wondering about the @testing-library/jest-dom, it’s because we want to use the custom matchers provided by the library globally as well.
@@ -148,7 +145,7 @@ export default Random;
 
 After that, create a tests directory in the src folder and add a Random.test.tsx file with the following code:
 
-src/**tests**/Random.test.tsx
+`src/__tests__/Random.test.tsx`
 
 ```tsx
 import { describe, it, expect } from 'vitest';
