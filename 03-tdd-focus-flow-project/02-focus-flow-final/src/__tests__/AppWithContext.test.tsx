@@ -4,7 +4,7 @@ import { describe, test, expect, beforeEach, vi } from 'vitest';
 import { FlowProvider } from '../FlowContext';
 import AppWithContext from '../AppWithContext';
 
-const getElements = () => ({
+const getFormElements = () => ({
   titleInput: screen.getByRole('textbox', { name: /title/i }),
   descriptionInput: screen.getByRole('textbox', { name: /description/i }),
   categorySelect: screen.getByRole('combobox', { name: /category/i }),
@@ -21,7 +21,7 @@ const customRenderAppWithContext = () => {
 
 const addTestItem = async (user: UserEvent) => {
   const { titleInput, descriptionInput, categorySelect, submitButton } =
-    getElements();
+    getFormElements();
   await user.type(titleInput, 'Test Item');
   await user.type(descriptionInput, 'Test Content');
   await user.selectOptions(categorySelect, 'urgent');
@@ -42,7 +42,7 @@ describe('AppWithContext', () => {
       screen.getByRole('heading', { level: 1, name: 'Focus Flow' })
     ).toBeInTheDocument();
     // Verify all form elements are present
-    const elements = getElements();
+    const elements = getFormElements();
     Object.values(elements).forEach((element) => {
       expect(element).toBeInTheDocument();
     });

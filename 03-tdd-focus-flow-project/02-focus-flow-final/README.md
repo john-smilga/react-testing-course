@@ -129,7 +129,7 @@ If you are up for a challenge, in the Readme you will find all the steps I took 
 
 2. Create helper functions:
 
-   - Define a function to get commonly used elements (e.g., `getElements`)
+   - Define a function to get commonly used elements (e.g., `getFormElements`)
 
 3. Set up the test suite:
 
@@ -177,7 +177,7 @@ import { describe, test, expect, vi } from 'vitest';
 import Form from '../components/Form';
 import userEvent, { UserEvent } from '@testing-library/user-event';
 
-const getElements = () => ({
+const getFormElements = () => ({
   titleInput: screen.getByRole('textbox', { name: /title/i }),
   descriptionInput: screen.getByRole('textbox', { name: /description/i }),
   categorySelect: screen.getByRole('combobox', { name: /category/i }),
@@ -196,7 +196,7 @@ describe('Form Component', () => {
 
   // 1. Test renders form with empty fields initially
   test('renders form with empty fields initially', () => {
-    const { titleInput, descriptionInput, categorySelect } = getElements();
+    const { titleInput, descriptionInput, categorySelect } = getFormElements();
 
     expect(titleInput).toHaveValue('');
     expect(descriptionInput).toHaveValue('');
@@ -205,7 +205,7 @@ describe('Form Component', () => {
   // 2. Test submits form with entered values
   test('submits form with entered values', async () => {
     const { titleInput, descriptionInput, categorySelect, submitButton } =
-      getElements();
+      getFormElements();
 
     await user.type(titleInput, 'New Task');
     await user.type(descriptionInput, 'Task Description');
@@ -220,14 +220,14 @@ describe('Form Component', () => {
   });
   // 3. Test validates required fields
   test('validates required fields', async () => {
-    const { submitButton } = getElements();
+    const { submitButton } = getFormElements();
     await user.click(submitButton);
     expect(mockOnSubmit).not.toHaveBeenCalled();
   });
   // 4. Test clears form after successful submission
   test('clears form after successful submission', async () => {
     const { titleInput, descriptionInput, categorySelect, submitButton } =
-      getElements();
+      getFormElements();
 
     await user.type(titleInput, 'New Task');
     await user.type(descriptionInput, 'Task Description');
@@ -325,13 +325,13 @@ const Form = ({ onSubmit }: { onSubmit: (item: ItemWithoutId) => void }) => {
 export default Form;
 ```
 
-### Test 2 : Submits form with entered values
+### Test 2 : Submit form with entered values
 
 ```tsx
-// 2. Test submits form with entered values
-test('submits form with entered values', async () => {
+// 2. Test submit form with entered values
+test('submit form with entered values', async () => {
   const { titleInput, descriptionInput, categorySelect, submitButton } =
-    getElements();
+    getFormElements();
 
   await user.type(titleInput, 'New Task');
   await user.type(descriptionInput, 'Task Description');
@@ -363,7 +363,7 @@ Since we use html input `required` attribute, test will pass right away if we do
 ```tsx
 // 3. Test validates required fields
 test('validates required fields', async () => {
-  const { submitButton } = getElements();
+  const { submitButton } = getFormElements();
   await user.click(submitButton);
   expect(mockOnSubmit).not.toHaveBeenCalled();
 });
@@ -384,7 +384,7 @@ const handleSubmit = (e: React.FormEvent) => {
 // 4. Test clears form after successful submission
 test('clears form after successful submission', async () => {
   const { titleInput, descriptionInput, categorySelect, submitButton } =
-    getElements();
+    getFormElements();
 
   await user.type(titleInput, 'New Task');
   await user.type(descriptionInput, 'Task Description');
@@ -513,12 +513,9 @@ components/ItemCard.tsx
 
 ```tsx
 import { Trash2 } from 'lucide-react';
+import { type Item } from '../utils';
 
-type ItemCardProps = {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
+type ItemCardProps = Item & {
   onDelete: (id: string) => void;
 };
 
@@ -579,6 +576,66 @@ describe('ItemCard', () => {
 });
 ```
 
+components/ItemCard.tsx
+
+```tsx
+import { Trash2 } from 'lucide-react';
+
+type ItemCardProps = {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  onDelete: (id: string) => void;
+};
+
+const categoryColors = {
+  urgent: 'bg-red-500',
+  important: 'bg-yellow-500',
+  normal: 'bg-blue-500',
+  low: 'bg-green-500',
+};
+
+const ItemCard = ({
+  id,
+  title,
+  description,
+  category,
+  onDelete,
+}: ItemCardProps) => {
+  return (
+    <article className='w-full rounded-lg border  shadow-sm'>
+      <div className='flex flex-row items-center justify-between p-6 pb-2'>
+        <h3 className='text-lg font-semibold leading-none tracking-tight'>
+          {title}
+        </h3>
+        <button
+          onClick={() => onDelete(id)}
+          aria-label={`Delete task: ${id}`}
+          className='inline-flex h-9 w-9 items-center justify-center rounded-md '
+        >
+          <Trash2 className='h-4 w-4' />
+        </button>
+      </div>
+      <div className='p-6 pt-2'>
+        <p className='text-sm text-muted-foreground mb-2'>{description}</p>
+        <div
+          className={`inline-block ${
+            // Access the color from categoryColors using category as key
+            // Fallback to bg-gray-500 if category doesn't exist in categoryColors
+            categoryColors[category as keyof typeof categoryColors] ||
+            'bg-gray-500'
+          } text-white text-xs font-semibold px-2 py-1 rounded`}
+        >
+          {category}
+        </div>
+      </div>
+    </article>
+  );
+};
+export default ItemCard;
+```
+
 ## Context API
 
 You can use current to setup to setup integration tests for App.tsx but in my case I will show you how to test components that use the context.
@@ -598,11 +655,11 @@ export default AppWithContext;
 import { createContext, useContext, ReactNode, useState } from 'react';
 import { Item, ItemWithoutId } from './utils';
 
-interface FlowContextType {
+type FlowContextType = {
   items: Item[];
   handleAddItem: (newItem: ItemWithoutId) => void;
   handleDeleteItem: (id: string) => void;
-}
+};
 
 const FlowContext = createContext<FlowContextType | undefined>(undefined);
 
@@ -680,9 +737,10 @@ import { render, screen } from '@testing-library/react';
 import userEvent, { UserEvent } from '@testing-library/user-event';
 import { describe, test, expect, beforeEach, vi } from 'vitest';
 import { FlowProvider } from '../FlowContext';
+
 import AppWithContext from '../AppWithContext';
 
-const getElements = () => ({
+const getFormElements = () => ({
   titleInput: screen.getByRole('textbox', { name: /title/i }),
   descriptionInput: screen.getByRole('textbox', { name: /description/i }),
   categorySelect: screen.getByRole('combobox', { name: /category/i }),
@@ -699,7 +757,7 @@ const customRenderAppWithContext = () => {
 
 const addTestItem = async (user: UserEvent) => {
   const { titleInput, descriptionInput, categorySelect, submitButton } =
-    getElements();
+    getFormElements();
   await user.type(titleInput, 'Test Item');
   await user.type(descriptionInput, 'Test Content');
   await user.selectOptions(categorySelect, 'urgent');
@@ -720,7 +778,7 @@ describe('AppWithContext', () => {
       screen.getByRole('heading', { level: 1, name: 'Focus Flow' })
     ).toBeInTheDocument();
     // Verify all form elements are present
-    const elements = getElements();
+    const elements = getFormElements();
     Object.values(elements).forEach((element) => {
       expect(element).toBeInTheDocument();
     });
