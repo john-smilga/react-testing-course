@@ -1,0 +1,49 @@
+{
+  "posts": [
+    {
+      "id": "2",
+      "title": "node ts course",
+      "likes": 8
+    },
+    {
+      "id": "832e",
+      "title": "new post",
+      "likes": 0
+    },
+    {
+      "id": "aa4b",
+      "title": "new post",
+      "likes": 0
+    },
+    {
+      "id": "eeed",
+      "title": "new post",
+      "likes": 0
+    },
+    {
+      "id": "c986",
+      "title": "new post",
+      "likes": 0
+    },
+    {
+      "id": "72b1",
+      "title": "new post",
+      "likes": 0
+    },
+    {
+      "id": "6029",
+      "title": "new post",
+      "likes": 0
+    },
+    {
+      "id": "2758",
+      "title": "new post",
+      "likes": 0
+    },
+    {
+      "id": "f03b",
+      "title": "new post",
+      "likes": 0
+    }
+  ]
+}
