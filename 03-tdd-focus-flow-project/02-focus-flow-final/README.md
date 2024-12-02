@@ -1,6 +1,8 @@
 # Focus Flow
 
-Next, we’re going to build an app called Focus Flow using the Test-Driven Development (TDD) approach. If you already forgot what is TDD, don’t worry—this will be a great way to see it in action! Hopefully during the project you will see how TDD helps you write better, more reliable applications by focusing on writing tests before you write any actual code, since this approach ensures your code is not only functional but also meets all requirements from the start.
+Alright, up next, we’re going to build an app called Focus Flow using the Test-Driven Development (TDD) approach. If you already forgot what is TDD, don’t worry—this will be a great way to see it in action! Hopefully during the project you will see how TDD helps you write better, more reliable applications by focusing on writing tests before you write any actual code, since this approach ensures your code is not only functional but also meets all requirements from the start.
+
+Our application will look like this:
 
 To follow along, make sure to download the starter project. Once you have it, install the dependencies and run the development server to get everything set up. The starter project builds on what we created in the last chapter but comes with Tailwind CSS and the lucide-react icons library already installed.
 
