@@ -3,7 +3,7 @@ import { describe, test, expect, vi } from 'vitest';
 import Form from '../components/Form';
 import userEvent, { UserEvent } from '@testing-library/user-event';
 
-const getFormElements = () => ({
+const getElements = () => ({
   titleInput: screen.getByRole('textbox', { name: /title/i }),
   descriptionInput: screen.getByRole('textbox', { name: /description/i }),
   categorySelect: screen.getByRole('combobox', { name: /category/i }),
@@ -17,12 +17,13 @@ describe('Form Component', () => {
   beforeEach(() => {
     mockOnSubmit.mockClear();
     user = userEvent.setup();
-    render(<Form onSubmit={mockOnSubmit} />);
   });
 
   // 1. Test renders form with empty fields initially
   test('renders form with empty fields initially', () => {
-    const { titleInput, descriptionInput, categorySelect } = getFormElements();
+    render(<Form onSubmit={mockOnSubmit} />);
+
+    const { titleInput, descriptionInput, categorySelect } = getElements();
 
     expect(titleInput).toHaveValue('');
     expect(descriptionInput).toHaveValue('');
@@ -30,8 +31,9 @@ describe('Form Component', () => {
   });
   // 2. Test submits form with entered values
   test('submits form with entered values', async () => {
+    render(<Form onSubmit={mockOnSubmit} />);
     const { titleInput, descriptionInput, categorySelect, submitButton } =
-      getFormElements();
+      getElements();
 
     await user.type(titleInput, 'New Task');
     await user.type(descriptionInput, 'Task Description');
@@ -46,7 +48,8 @@ describe('Form Component', () => {
   });
   // 3. Test validates required fields
   test('validates required fields', async () => {
-    const { submitButton } = getFormElements();
+    render(<Form onSubmit={mockOnSubmit} />);
+    const { submitButton } = getElements();
     await user.click(submitButton);
     expect(mockOnSubmit).not.toHaveBeenCalled();
   });
@@ -54,7 +57,7 @@ describe('Form Component', () => {
   test('clears form after successful submission', async () => {
     render(<Form onSubmit={mockOnSubmit} />);
     const { titleInput, descriptionInput, categorySelect, submitButton } =
-      getFormElements();
+      getElements();
 
     await user.type(titleInput, 'New Task');
     await user.type(descriptionInput, 'Task Description');
