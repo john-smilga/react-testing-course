@@ -638,7 +638,9 @@ export default ItemCard;
 
 ## Context API
 
-You can use current to setup to setup integration tests for App.tsx but in my case I will show you how to test components that use the context.
+Alright, now it's time to set up integration tests for App.tsx to test how our components interact with each other.
+
+We can definitely set up all the tests with the current setup, but to make it more interesting, I will show you how to test components that use context, in case you have such a setup, in your own projects. We'll first set up Context API and then write tests for `AppWithContext.tsx`
 
 - create `src/AppWithContext.tsx` file
 
