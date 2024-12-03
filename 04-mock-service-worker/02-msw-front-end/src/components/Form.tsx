@@ -1,10 +1,10 @@
-import { useState, FormEvent, ChangeEvent } from 'react';
+import { ChangeEvent, FormEvent, useState } from 'react';
 
 type FormProps = {
   onSubmit: (data: { title: string; likes: number }) => Promise<void>;
 };
 
-function Form({ onSubmit }: FormProps) {
+const Form = ({ onSubmit }: FormProps) => {
   const [title, setTitle] = useState('');
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
@@ -23,8 +23,8 @@ function Form({ onSubmit }: FormProps) {
         Title
       </label>
       <input
-        id='title'
         type='text'
+        id='title'
         value={title}
         onChange={handleChange}
         placeholder='Enter post title'
@@ -39,6 +39,5 @@ function Form({ onSubmit }: FormProps) {
       </button>
     </form>
   );
-}
-
+};
 export default Form;

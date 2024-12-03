@@ -1,5 +1,5 @@
-import { type Post } from '../hooks/usePosts';
 import Item from './Item';
+import { type Post } from '../hooks/usePosts';
 
 type ListProps = {
   posts: Post[];
@@ -7,14 +7,15 @@ type ListProps = {
   onDelete: (postId: string) => Promise<void>;
 };
 
-function List({ posts, onLike, onDelete }: ListProps) {
+const List = ({ posts, onLike, onDelete }: ListProps) => {
   return (
     <div className='space-y-4'>
-      {posts.map((post) => (
-        <Item key={post.id} post={post} onLike={onLike} onDelete={onDelete} />
-      ))}
+      {posts.map((post) => {
+        return (
+          <Item key={post.id} post={post} onLike={onLike} onDelete={onDelete} />
+        );
+      })}
     </div>
   );
-}
-
+};
 export default List;

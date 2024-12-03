@@ -1,14 +1,15 @@
 import { render, screen } from '@testing-library/react';
-import { describe, test, expect, vi } from 'vitest';
-import userEvent, { UserEvent } from '@testing-library/user-event';
+import userEvent, { type UserEvent } from '@testing-library/user-event';
 import Form from '../components/Form';
 
-export const getFormElements = () => ({
-  input: screen.getByRole('textbox', { name: /title/i }),
-  submitBtn: screen.getByRole('button', { name: /add post/i }),
-});
+export const getFormElements = () => {
+  return {
+    input: screen.getByRole('textbox', { name: /title/i }),
+    submitBtn: screen.getByRole('button', { name: /add post/i }),
+  };
+};
 
-describe('Form', () => {
+describe('Form Component', () => {
   const mockOnSubmit = vi.fn();
   let user: UserEvent;
 
@@ -35,7 +36,6 @@ describe('Form', () => {
   });
   test('submits the form with correct data', async () => {
     const { input, submitBtn } = getFormElements();
-
     await user.type(input, 'Test Post');
     await user.click(submitBtn);
 

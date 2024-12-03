@@ -18,13 +18,14 @@ export const usePosts = () => {
   const fetchPosts = async (): Promise<void> => {
     try {
       const { data } = await axios.get<Post[]>(API_URL);
+      // console.log(data);
+
       setPosts(data);
       setError('');
-    } catch (err) {
+    } catch (error) {
       setError('Failed to fetch posts');
     }
   };
-
   const handleCreatePost = async (postData: PostWithoutId): Promise<void> => {
     try {
       await axios.post(API_URL, {
@@ -32,7 +33,7 @@ export const usePosts = () => {
       });
       await fetchPosts();
       setError('');
-    } catch (err) {
+    } catch (error) {
       setError('Failed to create post');
     }
   };
@@ -48,29 +49,28 @@ export const usePosts = () => {
         ...post,
         likes: post.likes + 1,
       });
+
       await fetchPosts();
       setError('');
-    } catch (err) {
+    } catch (error) {
       setError('Failed to like post');
     }
   };
-
   const handleDelete = async (postId: string): Promise<void> => {
     try {
       await axios.delete(`${API_URL}/${postId}`);
       await fetchPosts();
       setError('');
-    } catch (err) {
+    } catch (error) {
       setError('Failed to delete post');
     }
   };
-
   return {
     posts,
     error,
     fetchPosts,
     handleCreatePost,
-    handleLike,
     handleDelete,
+    handleLike,
   };
 };

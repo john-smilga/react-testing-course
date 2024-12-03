@@ -8,10 +8,7 @@ type ItemProps = {
 
 const Item = ({ post, onLike, onDelete }: ItemProps) => {
   return (
-    <article
-      key={post.id}
-      className='border p-4 rounded flex items-center justify-between'
-    >
+    <article className='border p-4 rounded flex items-center justify-between'>
       <h3 className='text-lg'>{post.title}</h3>
       <div className='flex items-center gap-4'>
         <div className='flex items-center gap-2'>
@@ -32,5 +29,4 @@ const Item = ({ post, onLike, onDelete }: ItemProps) => {
     </article>
   );
 };
-
 export default Item;
